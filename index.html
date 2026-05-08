@@ -118,7 +118,7 @@
         }
 
         /* Forms & Inputs */
-        input[type="text"], textarea {
+        input[type="text"], textarea, select {
             width: 100%;
             padding: 1.2rem;
             background: var(--bg-surface);
@@ -128,8 +128,9 @@
             font-family: var(--font-body);
             font-size: 1.1rem;
             transition: var(--transition);
+            appearance: none;
         }
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
@@ -513,6 +514,23 @@
                 <div class="form-card">
                     <input type="text" id="destination" name="destination" placeholder="Where do you want to go?" required style="font-size: 1.5rem; padding: 1.5rem;">
                     
+                    <div>
+                        <label style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Nationality (Passport)</label>
+                        <select id="nationality" name="nationality" required>
+                            <option value="India" selected>🇮🇳 India</option>
+                            <option value="USA">🇺🇸 USA</option>
+                            <option value="UK">🇬🇧 UK</option>
+                            <option value="Canada">🇨🇦 Canada</option>
+                            <option value="Australia">🇦🇺 Australia</option>
+                            <option value="Germany">🇩🇪 Germany</option>
+                            <option value="France">🇫🇷 France</option>
+                            <option value="Japan">🇯🇵 Japan</option>
+                            <option value="Singapore">🇸🇬 Singapore</option>
+                            <option value="UAE">🇦🇪 UAE</option>
+                            <option value="Other">🌍 Other</option>
+                        </select>
+                    </div>
+
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div>
                             <label style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Dates</label>
@@ -781,6 +799,15 @@ Destination: ${AppState.data.destination}
 Dates: ${AppState.data.dates}
 Constraints: ${AppState.data.constraints}
 
+Traveler nationality: ${AppState.data.nationality}
+Check visa requirements specifically for ${AppState.data.nationality} passport holders traveling to ${AppState.data.destination}.
+Include:
+- Visa required or visa-free or visa on arrival
+- Visa cost and processing time
+- Documents required
+- Current visa approval difficulty
+- Any travel bans or restrictions
+
 CRITICAL CURRENCY INSTRUCTION:
 All costs must be in ${AppState.data.currency}. User budget is ${AppState.data.budget} ${AppState.data.currency}. Show all prices, estimates, breakdowns, hotel costs, meal costs, transport costs in ${AppState.data.currency} only. Do not use any other currency.
 
@@ -1000,6 +1027,15 @@ Style: ${AppState.data.style}
 Group Size: ${AppState.data.groupSize}
 Constraints: ${AppState.data.constraints}
 Resolved Risks: ${JSON.stringify(AppState.resolutions)}
+
+Traveler nationality: ${AppState.data.nationality}
+Check visa requirements specifically for ${AppState.data.nationality} passport holders traveling to ${AppState.data.destination}.
+Include:
+- Visa required or visa-free or visa on arrival
+- Visa cost and processing time
+- Documents required
+- Current visa approval difficulty
+- Any travel bans or restrictions
 
 CRITICAL CURRENCY INSTRUCTION:
 All costs must be strictly in ${AppState.data.currency}. User budget is ${AppState.data.budget} ${AppState.data.currency}. Show all prices, estimates, breakdowns, hotel costs, meal costs, transport costs in ${AppState.data.currency} only. DO NOT mix currencies.
