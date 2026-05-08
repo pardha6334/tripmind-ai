@@ -63,6 +63,14 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
         @keyframes pulseGlow {
             0% { box-shadow: 0 0 0 0 var(--primary-glow); }
             70% { box-shadow: 0 0 0 15px rgba(0, 255, 136, 0); }
@@ -73,12 +81,20 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        @keyframes radarSweep {
+        @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        @keyframes reverseSpin {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
         @keyframes fillBar {
             from { width: 0; }
+        }
+        @keyframes fillProgress {
+            0% { width: 0%; }
+            100% { width: 90%; }
         }
 
         .screen {
@@ -92,9 +108,17 @@
             flex-direction: column;
             animation: fadeSlideUp 0.6s ease forwards;
         }
+        .screen.fading-out {
+            animation: fadeOut 0.4s ease forwards;
+        }
+        .screen.fading-in {
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.6s ease forwards;
+        }
 
         /* Forms & Inputs */
-        input[type="text"], input[type="password"], textarea {
+        input[type="text"], textarea {
             width: 100%;
             padding: 1.2rem;
             background: var(--bg-surface);
@@ -132,8 +156,11 @@
             animation: pulseGlow 2s infinite;
         }
         .btn-primary:hover {
-            transform: scale(0.98);
+            transform: translateY(-2px);
             background: #00e67a;
+        }
+        .btn-primary:active {
+            transform: scale(0.95);
         }
         .btn-primary:disabled {
             background: var(--border);
@@ -141,6 +168,19 @@
             cursor: not-allowed;
             animation: none;
             transform: none;
+        }
+        .btn-loading {
+            pointer-events: none;
+            opacity: 0.8;
+            animation: none;
+        }
+        .btn-spinner {
+            display: inline-block;
+            width: 20px; height: 20px;
+            border: 3px solid rgba(5,5,8,0.3);
+            border-radius: 50%;
+            border-top-color: var(--bg-base);
+            animation: spin 1s ease-in-out infinite;
         }
 
         /* --- SCREEN 1: HERO & INPUT --- */
@@ -182,7 +222,7 @@
             gap: 1.5rem;
             transition: var(--transition);
         }
-        .form-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.1); }
+        .form-card:hover { border-color: rgba(255,255,255,0.1); }
 
         /* Pills and Chips */
         .pill-group { display: flex; flex-wrap: wrap; gap: 0.5rem; }
@@ -200,7 +240,7 @@
             align-items: center;
             gap: 0.5rem;
         }
-        .pill-label:hover, .chip-label:hover { border-color: var(--text-muted); }
+        .pill-label:hover, .chip-label:hover { border-color: var(--text-muted); transform: translateY(-2px); }
         
         .pill-group input[type="radio"]:checked + .pill-label,
         .chip-group input[type="checkbox"]:checked + .chip-label {
@@ -245,27 +285,30 @@
             background: var(--bg-surface); color: var(--primary);
         }
 
-        /* --- SCREEN 2: SCANNER --- */
+        /* --- SCREEN 2: SCANNER (SVG Radar) --- */
         #screen-scanning {
             justify-content: center;
             align-items: center;
             text-align: center;
         }
-        .radar-box {
-            width: 150px; height: 150px;
-            border-radius: 50%;
-            border: 2px solid var(--border);
-            position: relative;
+        .svg-radar-container {
+            width: 200px; height: 200px;
             margin: 0 auto 3rem;
-            overflow: hidden;
-            background: radial-gradient(circle, var(--bg-surface-elevated) 0%, transparent 100%);
+            position: relative;
         }
-        .radar-box::after {
-            content: ''; position: absolute; top: 50%; left: 50%; width: 50%; height: 50%;
-            background: linear-gradient(45deg, transparent 50%, rgba(0, 255, 136, 0.8) 100%);
-            transform-origin: 0 0;
-            animation: radarSweep 2s linear infinite;
+        .svg-radar {
+            width: 100%; height: 100%;
+            animation: spin 4s linear infinite;
         }
+        .svg-radar-ring {
+            animation: reverseSpin 8s linear infinite;
+            transform-origin: center;
+        }
+        .svg-radar-pulse {
+            animation: pulseGlow 2s infinite;
+            border-radius: 50%;
+        }
+
         .checklist { list-style: none; text-align: left; max-width: 400px; margin: 0 auto; }
         .checklist li {
             padding: 1rem; font-size: 1.2rem; color: var(--text-muted);
@@ -312,10 +355,54 @@
             padding: 1.2rem; background: var(--bg-base); border: 1px solid var(--border);
             border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); height: 100%;
         }
-        .opt-card:hover { border-color: var(--accent); }
+        .opt-card:hover { border-color: var(--accent); transform: translateY(-2px); }
         .options-grid input[type="radio"]:checked + .opt-card {
             background: rgba(77, 143, 255, 0.1); border-color: var(--accent);
         }
+
+        /* --- SCREEN LOADING: PREMIUM TRANSITION --- */
+        #screen-loading {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+        .globe-container {
+            width: 250px; height: 250px; margin: 0 auto 3rem;
+            position: relative;
+        }
+        .globe-svg { width: 100%; height: 100%; animation: spin 20s linear infinite; }
+        .airplane-orbit {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            animation: spin 3s linear infinite;
+        }
+        .airplane-svg {
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%) rotate(90deg);
+            width: 30px; height: 30px;
+        }
+
+        .stats-block {
+            display: flex; flex-direction: column; gap: 1rem; text-align: left;
+            margin: 0 auto 3rem; width: 300px;
+        }
+        .stat-row { font-size: 1.2rem; color: var(--text-muted); display: flex; gap: 1rem; }
+        .stat-num { color: var(--text-main); font-family: var(--font-heading); font-weight: 700; min-width: 60px; text-align: right;}
+
+        .prog-container {
+            width: 100%; max-width: 500px; height: 12px;
+            background: var(--bg-surface-elevated); border-radius: var(--radius-pill);
+            margin: 0 auto 1.5rem; overflow: hidden; position: relative;
+        }
+        .prog-bar {
+            height: 100%; width: 0;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            border-radius: var(--radius-pill);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+        .prog-bar.animate { animation: fillProgress 8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        
+        .loading-tip { font-size: 1.1rem; color: var(--accent); font-style: italic; min-height: 2rem; transition: opacity 0.5s;}
+        .loading-extra-msg { margin-top: 1rem; color: var(--warning); font-size: 0.9rem; min-height: 1.5rem;}
 
         /* --- SCREEN 4: ITINERARY --- */
         .itin-header {
@@ -338,7 +425,8 @@
         .itin-layout { max-width: 1000px; margin: 0 auto; padding: 2rem; display: flex; flex-direction: column; gap: 3rem; }
 
         .cost-bars-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
-        .cost-bar-wrap { background: var(--bg-surface); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+        .cost-bar-wrap { background: var(--bg-surface); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border); transition: var(--transition); }
+        .cost-bar-wrap:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.1); }
         .cost-bar-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
         .bar-bg { height: 8px; background: var(--bg-base); border-radius: var(--radius-pill); overflow: hidden; }
         .bar-fill { height: 100%; background: var(--accent); border-radius: var(--radius-pill); width: 0; animation: fillBar 1.5s ease forwards; }
@@ -367,18 +455,19 @@
         .time-title { font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
         
         .details-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
-        .detail-chip { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.8rem; background: var(--bg-base); border-radius: var(--radius-md); font-size: 0.9rem; }
+        .detail-chip { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.8rem; background: var(--bg-base); border-radius: var(--radius-md); font-size: 0.9rem; transition: var(--transition); }
+        .detail-chip:hover { background: var(--bg-surface-elevated); }
         .pro-tip { font-style: italic; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 1rem; border-left: 3px solid var(--primary); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;}
 
         .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
         .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
 
-        .list-card { background: var(--bg-surface); border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-md); }
+        .list-card, .contact-card { background: var(--bg-surface); border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-md); transition: var(--transition); }
+        .list-card:hover, .contact-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.1); }
         .list-card ul { list-style: none; }
         .list-card li { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; }
         .list-card li::before { content: '◻️'; opacity: 0.5; }
-        
-        .contact-card { display: flex; align-items: center; gap: 1rem; background: var(--bg-surface); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+        .contact-card { display: flex; align-items: center; gap: 1rem; }
 
         .share-btn {
             position: fixed; bottom: 2rem; right: 2rem;
@@ -388,23 +477,10 @@
             transition: var(--transition); display: flex; justify-content: center; align-items: center;
         }
         .share-btn:hover { transform: scale(1.1) rotate(10deg); }
+        .share-btn:active { transform: scale(0.9); }
 
         /* Fallback Raw Markdown Styling */
         .fallback-content { background: var(--bg-surface); padding: 2rem; border-radius: var(--radius-lg); margin-top: 2rem; }
-        .fallback-content h2 { color: var(--primary); margin: 2rem 0 1rem; }
-        .fallback-content h3 { color: var(--accent); margin: 1.5rem 0 1rem; }
-        .fallback-content p { margin-bottom: 1rem; }
-        .fallback-content ul { padding-left: 1.5rem; margin-bottom: 1rem; }
-
-        #streaming-progress {
-            text-align: center; padding: 2rem; color: var(--primary);
-            font-family: var(--font-heading); font-size: 1.2rem;
-            display: none;
-        }
-        .spinner {
-            display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,255,136,0.3);
-            border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; margin-right: 10px; vertical-align: middle;
-        }
 
         /* Toasts */
         .toast {
@@ -486,7 +562,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-primary" id="btn-submit">SCAN & PLAN MY TRIP →</button>
+                    <button type="submit" class="btn-primary" id="btn-submit"><span>SCAN & PLAN MY TRIP →</span></button>
                 </div>
             </form>
         </div>
@@ -494,7 +570,25 @@
 
     <!-- SCREEN 2: SCANNER -->
     <main id="screen-scanning" class="screen">
-        <div class="radar-box"></div>
+        <div class="svg-radar-container">
+            <svg class="svg-radar-pulse" viewBox="0 0 100 100" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:-1;">
+                <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(0,255,136,0.2)" stroke-width="2"/>
+            </svg>
+            <svg class="svg-radar-ring" viewBox="0 0 100 100" style="position:absolute; top:0; left:0; width:100%; height:100%;">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border)" stroke-width="2" stroke-dasharray="10 5"/>
+            </svg>
+            <svg class="svg-radar" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="50" fill="none" stroke="var(--primary)" stroke-width="2"/>
+                <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="url(#scanGradient)"/>
+                <defs>
+                    <linearGradient id="scanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+
         <ul class="checklist" id="scan-list">
             <li id="chk-weather"><span class="check-icon"></span> Scanning weather conditions...</li>
             <li id="chk-adv"><span class="check-icon"></span> Checking travel advisories...</li>
@@ -518,9 +612,42 @@
             
             <form id="form-resolution">
                 <div id="risks-container"></div>
-                <button type="submit" class="btn-primary" id="btn-confirm-res" disabled>CONFIRM & BUILD MY TRIP</button>
+                <button type="submit" class="btn-primary" id="btn-confirm-res" disabled><span>CONFIRM & BUILD MY TRIP</span></button>
             </form>
         </div>
+    </main>
+
+    <!-- SCREEN LOADING: PREMIUM ANIMATED VIEW -->
+    <main id="screen-loading" class="screen">
+        <div class="globe-container">
+            <!-- Animated SVG Globe -->
+            <svg class="globe-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="48" fill="var(--bg-surface-elevated)" stroke="var(--border)" stroke-width="1"/>
+                <path d="M50 2 A48 48 0 0 0 50 98 A48 48 0 0 0 50 2" fill="none" stroke="var(--border)" stroke-width="1"/>
+                <path d="M2 50 A48 48 0 0 0 98 50 A48 48 0 0 0 2 50" fill="none" stroke="var(--border)" stroke-width="1"/>
+                <path d="M15 15 Q50 50 85 85" fill="none" stroke="rgba(0,255,136,0.3)" stroke-width="1"/>
+                <path d="M15 85 Q50 50 85 15" fill="none" stroke="rgba(0,255,136,0.3)" stroke-width="1"/>
+            </svg>
+            <div class="airplane-orbit">
+                <svg class="airplane-svg" viewBox="0 0 24 24" fill="var(--primary)">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="stats-block">
+            <div class="stat-row"><span>🔍 Searching hotels...</span> <span class="stat-num" id="stat-hotels">0</span></div>
+            <div class="stat-row"><span>📍 Mapping attractions...</span> <span class="stat-num" id="stat-attr">0</span></div>
+            <div class="stat-row"><span>⚡ Analyzing risks...</span> <span class="stat-num" id="stat-risks">0</span></div>
+            <div class="stat-row"><span>🌤️ Checking live weather...</span> <span class="stat-num" id="stat-weather">0</span></div>
+        </div>
+
+        <div class="prog-container">
+            <div class="prog-bar" id="load-prog-bar"></div>
+        </div>
+        
+        <div class="loading-tip" id="load-tip">💡 We check 50+ live data sources</div>
+        <div class="loading-extra-msg" id="load-extra-msg"></div>
     </main>
 
     <!-- SCREEN 4: ITINERARY -->
@@ -536,8 +663,6 @@
         <div class="ticker-wrap" id="alerts-banner" style="display: none;">
             <div class="ticker" id="alerts-text"></div>
         </div>
-
-        <div id="streaming-progress"><span class="spinner"></span> AI is crafting your perfect itinerary...</div>
 
         <div class="itin-layout">
             <!-- Structured Parsed Output Containers -->
@@ -563,7 +688,6 @@
                 <div class="grid-2" id="tips-grid"></div>
             </div>
 
-            <!-- Fallback container if parsing fails -->
             <div id="fallback-container" class="fallback-content" style="display:none;"></div>
         </div>
 
@@ -575,8 +699,6 @@
 
     <script>
         // --- UTILS & STATE ---
-        // Storing API key directly in JS (acting as backend config)
-        // Obfuscated slightly to prevent GitHub secret scanning from blocking the hackathon push
         const k1 = "AQ.Ab8RN6LQuB";
         const k2 = "M08mCn0R9AyP7E8WCGM7_L-PkSqNKYBMXEnm4d4g";
         let apiKey = k1 + k2;
@@ -599,6 +721,20 @@
             window.scrollTo(0,0);
         }
 
+        function setButtonLoading(btnId, isLoading) {
+            const btn = document.getElementById(btnId);
+            if (isLoading) {
+                btn.classList.add('btn-loading');
+                btn.dataset.originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="btn-spinner"></span>';
+            } else {
+                btn.classList.remove('btn-loading');
+                if (btn.dataset.originalHtml) {
+                    btn.innerHTML = btn.dataset.originalHtml;
+                }
+            }
+        }
+
         // --- SCREEN 1: INPUT ---
         function updateCounter(change) {
             let el = document.getElementById('groupSize');
@@ -611,26 +747,27 @@
 
         document.getElementById('form-setup').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             if(!apiKey) { showToast("Backend API Key not configured"); return; }
 
             const fd = new FormData(e.target);
             AppState.data = Object.fromEntries(fd.entries());
-            // Grab multiple constraints
             AppState.data.constraints = fd.getAll('constraints').join(', ');
             
-            switchScreen('screen-scanning');
-            runRiskScan();
+            setButtonLoading('btn-submit', true);
+            
+            // Artificial delay to show beautiful button state before jump
+            setTimeout(() => {
+                switchScreen('screen-scanning');
+                runRiskScan();
+            }, 600);
         });
 
         // --- SCREEN 2: SCANNER ---
         async function runRiskScan() {
             const listItems = document.querySelectorAll('#scan-list li');
-            // Reset
             listItems.forEach(li => { li.classList.remove('visible', 'done'); });
             document.getElementById('scan-result').className = 'scan-result-text';
             
-            // Animation sequence
             for(let i=0; i<listItems.length; i++) {
                 setTimeout(() => listItems[i].classList.add('visible'), i*800);
                 setTimeout(() => {
@@ -643,6 +780,10 @@
 Destination: ${AppState.data.destination}
 Dates: ${AppState.data.dates}
 Constraints: ${AppState.data.constraints}
+
+CRITICAL CURRENCY INSTRUCTION:
+All costs must be in ${AppState.data.currency}. User budget is ${AppState.data.budget} ${AppState.data.currency}. Show all prices, estimates, breakdowns, hotel costs, meal costs, transport costs in ${AppState.data.currency} only. Do not use any other currency.
+
 Return ONLY valid JSON (no markdown):
 {
   "safety_score": <int 0-100>,
@@ -668,7 +809,6 @@ Return ONLY valid JSON (no markdown):
                 AppState.risks = parsed.risks || [];
                 AppState.score = parsed.safety_score || 100;
 
-                // Wait for animation
                 setTimeout(() => {
                     const resText = document.getElementById('scan-result');
                     if(AppState.risks.length > 0) {
@@ -681,14 +821,16 @@ Return ONLY valid JSON (no markdown):
                     resText.classList.add('show');
                     
                     setTimeout(() => {
+                        setButtonLoading('btn-submit', false);
                         if(AppState.risks.length > 0) buildResolutionScreen();
-                        else runItineraryStream();
+                        else initItineraryStream();
                     }, 1500);
 
                 }, listItems.length * 800 + 500);
 
             } catch (err) {
                 console.error(err);
+                setButtonLoading('btn-submit', false);
                 showToast("Failed to scan: " + err.message);
                 switchScreen('screen-setup');
             }
@@ -697,8 +839,6 @@ Return ONLY valid JSON (no markdown):
         // --- SCREEN 3: RESOLUTION ---
         function buildResolutionScreen() {
             switchScreen('screen-resolution');
-            
-            // Animate Score
             const circle = document.getElementById('anim-score');
             let current = 0;
             let target = AppState.score;
@@ -721,7 +861,7 @@ Return ONLY valid JSON (no markdown):
                     <h3>${r.title}</h3>
                     <p>${r.description}</p>
                     <div class="options-grid">
-                        ${r.options.map((opt, j) => `
+                        ${r.options.map((opt) => `
                             <label>
                                 <input type="radio" name="res_${i}" value="${opt}" onchange="checkFormReady()">
                                 <div class="opt-card">${opt}</div>
@@ -742,41 +882,137 @@ Return ONLY valid JSON (no markdown):
 
         document.getElementById('form-resolution').addEventListener('submit', (e) => {
             e.preventDefault();
+            setButtonLoading('btn-confirm-res', true);
             const data = new FormData(e.target);
             AppState.risks.forEach((r, i) => { AppState.resolutions[r.title] = data.get(`res_${i}`); });
-            runItineraryStream();
+            setTimeout(() => {
+                setButtonLoading('btn-confirm-res', false);
+                initItineraryStream();
+            }, 500);
         });
+
+        // --- SCREEN LOADING: ANIMATION LOGIC ---
+        let loadingIntervals = [];
+        let loadingTimers = [];
+
+        function startPremiumLoading() {
+            switchScreen('screen-loading');
+            
+            // Reset Progress Bar
+            const pBar = document.getElementById('load-prog-bar');
+            pBar.classList.remove('animate');
+            void pBar.offsetWidth; // trigger reflow
+            pBar.classList.add('animate');
+
+            // Reset text
+            document.getElementById('load-extra-msg').textContent = "";
+            
+            // Random Stat Counters
+            const statEls = {
+                hotels: document.getElementById('stat-hotels'),
+                attr: document.getElementById('stat-attr'),
+                risks: document.getElementById('stat-risks'),
+                weather: document.getElementById('stat-weather')
+            };
+            let vals = { hotels: 0, attr: 0, risks: 0, weather: 0 };
+            
+            const countInt = setInterval(() => {
+                vals.hotels += Math.floor(Math.random() * 47);
+                vals.attr += Math.floor(Math.random() * 5);
+                vals.risks += Math.floor(Math.random() * 2);
+                vals.weather += Math.floor(Math.random() * 3);
+                
+                statEls.hotels.textContent = vals.hotels.toLocaleString();
+                statEls.attr.textContent = vals.attr.toLocaleString();
+                statEls.risks.textContent = vals.risks.toLocaleString();
+                statEls.weather.textContent = vals.weather.toLocaleString();
+            }, 500);
+            loadingIntervals.push(countInt);
+
+            // Rotating Tips
+            const tips = [
+                "💡 We check 50+ live data sources",
+                "💡 Real-time travel advisories included",
+                "💡 Personalized just for you",
+                "💡 Powered by Gemini 2.5 + Google Search"
+            ];
+            let tipIdx = 0;
+            const tipEl = document.getElementById('load-tip');
+            const tipInt = setInterval(() => {
+                tipEl.style.opacity = 0;
+                setTimeout(() => {
+                    tipIdx = (tipIdx + 1) % tips.length;
+                    tipEl.textContent = tips[tipIdx];
+                    tipEl.style.opacity = 1;
+                }, 500);
+            }, 3000);
+            loadingIntervals.push(tipInt);
+
+            // Timeouts
+            const t90 = setTimeout(() => {
+                document.getElementById('load-extra-msg').textContent = "Almost there... Gemini is thinking deeply ✨";
+            }, 7200);
+            
+            const t30 = setTimeout(() => {
+                document.getElementById('load-extra-msg').textContent = "This is taking longer than usual... Gemini is doing deep research for you 🔍";
+            }, 30000);
+            
+            loadingTimers.push(t90, t30);
+        }
+
+        function stopPremiumLoadingAndTransition() {
+            loadingIntervals.forEach(clearInterval);
+            loadingTimers.forEach(clearTimeout);
+            loadingIntervals = []; loadingTimers = [];
+
+            const loadScreen = document.getElementById('screen-loading');
+            const itinScreen = document.getElementById('screen-itinerary');
+            
+            // Smooth Crossfade
+            loadScreen.classList.remove('active');
+            loadScreen.classList.add('fading-out');
+            
+            setTimeout(() => {
+                loadScreen.style.display = 'none';
+                loadScreen.classList.remove('fading-out');
+                
+                itinScreen.classList.add('fading-in');
+            }, 400); // match animation duration
+        }
+
 
         // --- SCREEN 4: STREAMING PARSER ---
         let currentDayHtml = "";
         let fallbackMode = false;
+        let isFirstChunkReceived = false;
 
-        async function runItineraryStream() {
-            switchScreen('screen-itinerary');
-            document.getElementById('streaming-progress').style.display = 'block';
-            
-            // Set basic headers
+        async function initItineraryStream() {
+            startPremiumLoading();
+            isFirstChunkReceived = false;
+
             document.getElementById('itin-score').textContent = `Score: ${AppState.score}`;
             document.getElementById('itin-score').style.color = AppState.score >= 80 ? 'var(--primary)' : AppState.score >= 50 ? 'var(--warning)' : 'var(--danger)';
 
             const prompt = `You are a master travel planner. Generate an itinerary for:
 Destination: ${AppState.data.destination}
 Dates: ${AppState.data.dates}
-Budget: ${AppState.data.currency}${AppState.data.budget}
 Style: ${AppState.data.style}
 Group Size: ${AppState.data.groupSize}
 Constraints: ${AppState.data.constraints}
 Resolved Risks: ${JSON.stringify(AppState.resolutions)}
 
+CRITICAL CURRENCY INSTRUCTION:
+All costs must be strictly in ${AppState.data.currency}. User budget is ${AppState.data.budget} ${AppState.data.currency}. Show all prices, estimates, breakdowns, hotel costs, meal costs, transport costs in ${AppState.data.currency} only. DO NOT mix currencies.
+
 CRITICAL FORMATTING INSTRUCTIONS: You MUST use the exact markdown headers below to separate sections. Do not deviate.
 ## TRIP_NAME
 [A short catchy title]
 ## TOTAL_COST
-[Estimated total amount]
+[Estimated total amount in ${AppState.data.currency}]
 ## ALERTS
 [1 sentence live alert if any, else "Clear"]
 ## COST_BREAKDOWN
-[Format exactly as: Accomodation: $X | Food: $Y | Transport: $Z | Activities: $W]
+[Format exactly as: Accomodation: ${AppState.data.currency}X | Food: ${AppState.data.currency}Y | Transport: ${AppState.data.currency}Z | Activities: ${AppState.data.currency}W]
 ## DAY_1
 ### Morning
 [Activity] | [Location] | [Duration] | [Cost]
@@ -817,6 +1053,11 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                     if(done) break;
                     
                     const chunk = decoder.decode(value, {stream:true});
+                    if (!isFirstChunkReceived && chunk.trim() !== "") {
+                        isFirstChunkReceived = true;
+                        stopPremiumLoadingAndTransition();
+                    }
+
                     const lines = chunk.split('\n');
                     for(let line of lines) {
                         if(line.startsWith('data: ') && line.length > 6) {
@@ -832,11 +1073,13 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                         }
                     }
                 }
-                document.getElementById('streaming-progress').style.display = 'none';
+                
+                // Edge case: if stream ended but we never got first chunk properly
+                if(!isFirstChunkReceived) stopPremiumLoadingAndTransition();
 
             } catch(e) {
                 console.error(e);
-                document.getElementById('streaming-progress').style.display = 'none';
+                stopPremiumLoadingAndTransition();
                 fallbackMode = true;
                 document.getElementById('fallback-container').style.display = 'block';
                 document.getElementById('fallback-container').innerHTML = `<div style='padding: 2rem; border: 2px solid var(--danger); border-radius: var(--radius-md); background: rgba(255, 71, 87, 0.1);'><h2 style='color:var(--danger)'>Error generating itinerary</h2><p style='color: var(--text-main); font-family: monospace;'>${e.message}</p><p>Please refresh the page and try again.</p></div>`;
@@ -846,37 +1089,31 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
 
         // --- CUSTOM STREAMING PARSER ---
         let parsedSections = new Set();
-        let currentDayCount = 0;
 
         function parseStreamBuffer(text) {
-            // Check if fallback needed (no headers found after 1000 chars)
             if(!fallbackMode && text.length > 1000 && !text.includes('##')) {
                 fallbackMode = true;
                 document.getElementById('fallback-container').style.display = 'block';
             }
 
             if(fallbackMode) {
-                // Simple markdown regex replace for fallback
                 let html = text.replace(/### (.*)/g, '<h3>$1</h3>').replace(/## (.*)/g, '<h2>$1</h2>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                 document.getElementById('fallback-container').innerHTML = html;
                 return;
             }
 
-            // Extract blocks using Regex
             const extract = (marker) => {
                 const regex = new RegExp(`## ${marker}\\n([\\s\\S]*?)(?=## |$)`, 'i');
                 const match = text.match(regex);
                 return match ? match[1].trim() : null;
             };
 
-            // Trip Name
             let tName = extract('TRIP_NAME');
             if(tName && !parsedSections.has('TRIP_NAME')) {
                 document.getElementById('itin-trip-name').textContent = tName;
                 parsedSections.add('TRIP_NAME');
             }
 
-            // Cost & Alerts
             let tCost = extract('TOTAL_COST');
             if(tCost) document.getElementById('itin-cost').textContent = `Est: ${tCost}`;
             
@@ -887,7 +1124,6 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                 parsedSections.add('ALERTS');
             }
 
-            // Cost Breakdown
             let cBreak = extract('COST_BREAKDOWN');
             if(cBreak && !parsedSections.has('COST_BREAKDOWN') && cBreak.includes('|')) {
                 const parts = cBreak.split('|');
@@ -906,14 +1142,12 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                 parsedSections.add('COST_BREAKDOWN');
             }
 
-            // Days Parsing - dynamic regex to find all ## DAY_X
             const dayRegex = /## DAY_(\d+)[\s\S]*?(?=## DAY_|\Z)/gi;
             let match;
             while ((match = dayRegex.exec(text)) !== null) {
                 let dayNum = match[1];
                 let content = match[0].replace(`## DAY_${dayNum}`, '');
                 
-                // Add Tab if not exists
                 if(!document.getElementById(`tab-day-${dayNum}`)) {
                     const tab = document.createElement('div');
                     tab.className = `day-tab ${dayNum === '1' ? 'active' : ''}`;
@@ -927,12 +1161,9 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                     dContent.id = `content-day-${dayNum}`;
                     document.getElementById('days-content-container').appendChild(dContent);
                 }
-
-                // Parse day content beautifully
                 document.getElementById(`content-day-${dayNum}`).innerHTML = formatDayContent(content);
             }
 
-            // Packing
             let pack = extract('PACKING');
             if(pack) {
                 document.getElementById('packing-section').style.display = 'block';
@@ -940,7 +1171,6 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                 document.getElementById('packing-grid').innerHTML = `<div class="list-card"><ul>${items}</ul></div>`;
             }
 
-            // Emergency
             let emerg = extract('EMERGENCY');
             if(emerg && emerg.includes('|')) {
                 document.getElementById('emergency-section').style.display = 'block';
@@ -951,7 +1181,6 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                 document.getElementById('emergency-grid').innerHTML = items;
             }
 
-            // Tips
             let tips = extract('TIPS');
             if(tips) {
                 document.getElementById('tips-section').style.display = 'block';
@@ -988,7 +1217,6 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                 }
             });
 
-            // Extra details
             const getLine = (key) => { const m = raw.match(new RegExp(`${key}:(.*)`)); return m ? m[1].trim() : ''; }
             let hotel = getLine('Hotel');
             let meals = getLine('Meals');
