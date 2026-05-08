@@ -72,7 +72,7 @@
 
         /* Nav & Stepper */
         .nav-header {
-            position: sticky; top: 0; z-index: 1000;
+            position: sticky; top: 0 !important; margin-top: 0 !important; z-index: 1000;
             background: rgba(7,7,9,0.95); backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
             padding: 1rem 2rem;
@@ -326,17 +326,17 @@
                 <div class="form-group">
                     <label class="form-label">Nationality (Passport)</label>
                     <select id="nationality" name="nationality" required>
-                        <option value="India" selected>🇮🇳 India</option>
-                        <option value="USA">🇺🇸 USA</option>
-                        <option value="UK">🇬🇧 UK</option>
-                        <option value="Canada">🇨🇦 Canada</option>
-                        <option value="Australia">🇦🇺 Australia</option>
-                        <option value="Germany">🇩🇪 Germany</option>
-                        <option value="France">🇫🇷 France</option>
-                        <option value="Japan">🇯🇵 Japan</option>
-                        <option value="Singapore">🇸🇬 Singapore</option>
-                        <option value="UAE">🇦🇪 UAE</option>
-                        <option value="Other">🌍 Other</option>
+                        <option value="🇮🇳 India" selected>🇮🇳 India</option>
+                        <option value="🇺🇸 USA">🇺🇸 USA</option>
+                        <option value="🇬🇧 UK">🇬🇧 UK</option>
+                        <option value="🇨🇦 Canada">🇨🇦 Canada</option>
+                        <option value="🇦🇺 Australia">🇦🇺 Australia</option>
+                        <option value="🇩🇪 Germany">🇩🇪 Germany</option>
+                        <option value="🇫🇷 France">🇫🇷 France</option>
+                        <option value="🇯🇵 Japan">🇯🇵 Japan</option>
+                        <option value="🇸🇬 Singapore">🇸🇬 Singapore</option>
+                        <option value="🇦🇪 UAE">🇦🇪 UAE</option>
+                        <option value="🌍 Other">🌍 Other</option>
                     </select>
                     <p class="helper-text">We check visa requirements specific to your passport.</p>
                 </div>
@@ -513,8 +513,14 @@
         };
 
         const flags = {
-            'India': '🇮🇳', 'USA': '🇺🇸', 'UK': '🇬🇧', 'Canada': '🇨🇦', 'Australia': '🇦🇺',
-            'Germany': '🇩🇪', 'France': '🇫🇷', 'Japan': '🇯🇵', 'Singapore': '🇸🇬', 'UAE': '🇦🇪', 'Other': '🌍'
+            '🇮🇳 India': '🇮🇳', '🇺🇸 USA': '🇺🇸', '🇬🇧 UK': '🇬🇧', '🇨🇦 Canada': '🇨🇦', '🇦🇺 Australia': '🇦🇺',
+            '🇩🇪 Germany': '🇩🇪', '🇫🇷 France': '🇫🇷', '🇯🇵 Japan': '🇯🇵', '🇸🇬 Singapore': '🇸🇬', '🇦🇪 UAE': '🇦🇪', '🌍 Other': '🌍'
+        };
+        const capitals = {
+            '🇮🇳 India': 'New Delhi', '🇺🇸 USA': 'Washington D.C.', '🇬🇧 UK': 'London', 
+            '🇨🇦 Canada': 'Ottawa', '🇦🇺 Australia': 'Canberra', '🇩🇪 Germany': 'Berlin', 
+            '🇫🇷 France': 'Paris', '🇯🇵 Japan': 'Tokyo', '🇸🇬 Singapore': 'Singapore', 
+            '🇦🇪 UAE': 'Abu Dhabi', '🌍 Other': 'your capital city'
         };
 
         document.addEventListener('DOMContentLoaded', () => {
