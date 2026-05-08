@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TripMind AI | Plan smart. Travel safe.</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://generativelanguage.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+  <title>TripMind AI | Plan smart. Travel safe.</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -18,7 +19,7 @@
             --warning: #ffd93d;
             --danger: #ff4757;
             --text-main: #ffffff;
-            --text-muted: #8b8b9e;
+            --text-muted: #c7c7dc;
             --border: rgba(255,255,255,0.08);
             
             --font-heading: 'Syne', sans-serif;
@@ -122,6 +123,17 @@
         .form-group { margin-bottom: 1.5rem; }
         .form-label { color: var(--text-main); font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; display: block; }
         .helper-text { color: var(--text-muted); font-size: 0.85rem; font-style: italic; margin-top: 0.3rem; }
+        .error-text {
+            color: #ff7580;
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-top: 0.4rem;
+            min-height: 1.2rem;
+        }
+        .field-invalid {
+            border-color: #ff7580 !important;
+            box-shadow: 0 0 0 2px rgba(255, 117, 128, 0.2) !important;
+        }
         
         input[type="text"], textarea {
             width: 100%; padding: 1.2rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
@@ -315,42 +327,49 @@
 </head>
 <body>
 
-    <nav class="nav-header">
-        <button class="back-btn" id="btn-back" onclick="goBack()">←</button>
-        <div class="stepper" id="global-stepper">
-            <div class="step active" id="step-1" onclick="navigateToStep(1)"><div class="step-icon">1</div><span>Plan</span></div>
+    <nav class="nav-header" aria-label="Trip workflow navigation">
+        <button class="back-btn" id="btn-back" onclick="goBack()" aria-label="Go back">←</button>
+        <div class="stepper" id="global-stepper" role="navigation" aria-label="Trip planning stepper">
+            <div class="step active" id="step-1" onclick="navigateToStep(1)" role="button" tabindex="0" aria-label="Go to plan step"><div class="step-icon">1</div><span>Plan</span></div>
             <div class="step-divider"></div>
-            <div class="step" id="step-2"><div class="step-icon">2</div><span>Risk Scan</span></div>
+            <div class="step" id="step-2" role="button" tabindex="0" aria-label="Risk scan step"><div class="step-icon">2</div><span>Risk Scan</span></div>
             <div class="step-divider"></div>
-            <div class="step" id="step-3"><div class="step-icon">3</div><span>Review</span></div>
+            <div class="step" id="step-3" role="button" tabindex="0" aria-label="Review risks step"><div class="step-icon">3</div><span>Review</span></div>
             <div class="step-divider"></div>
-            <div class="step" id="step-4"><div class="step-icon">4</div><span>Itinerary</span></div>
+            <div class="step" id="step-4" role="button" tabindex="0" aria-label="View itinerary step"><div class="step-icon">4</div><span>Itinerary</span></div>
         </div>
-        <div style="width:40px;"></div> <!-- Spacer for center alignment -->
+        <div style="width:40px;" aria-hidden="true"></div> <!-- Spacer for center alignment -->
     </nav>
 
     <!-- SCREEN 1: SETUP -->
-    <main id="screen-setup" class="screen">
+    <main id="screen-setup" class="screen" role="main">
         <div style="text-align:center; margin-bottom: 2rem;">
             <h1>TripMind AI ✈️</h1>
             <p style="color: var(--primary); font-family: var(--font-heading); font-weight:700;">Plan smart. Travel safe.</p>
         </div>
         
-        <form id="form-setup">
+        <form id="form-setup" novalidate>
             <div class="glass-card" style="padding: 2rem;">
+                <div class="form-group">
+                    <label class="form-label" for="apiKeyInput">Gemini API Key</label>
+                    <input type="password" id="apiKeyInput" name="apiKeyInput" placeholder="Paste API key (starts with AI...)" required aria-label="Gemini API key" aria-describedby="apiKey-help apiKey-error">
+                    <p class="helper-text" id="apiKey-help">Stored only in sessionStorage for this tab.</p>
+                    <p class="error-text" id="apiKey-error" aria-live="polite"></p>
+                </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Destination</label>
+                    <label class="form-label" for="destination">Destination</label>
                     <div class="autocomplete-wrapper">
-                        <input type="text" id="destination" name="destination" placeholder="Where do you want to go?" required autocomplete="off" style="font-size: 1.5rem; font-weight:700;">
-                        <ul id="dest-suggestions" class="autocomplete-dropdown"></ul>
+                        <input type="text" id="destination" name="destination" placeholder="Where do you want to go?" required autocomplete="off" style="font-size: 1.5rem; font-weight:700;" aria-label="Destination" aria-describedby="origin-hint destination-error">
+                        <ul id="dest-suggestions" class="autocomplete-dropdown" aria-live="polite"></ul>
                     </div>
                     <p class="helper-text" id="origin-hint">Flight costs estimated from New Delhi. We scan live safety alerts for this location.</p>
+                    <p class="error-text" id="destination-error" aria-live="polite"></p>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Nationality (Passport)</label>
-                    <select id="nationality" name="nationality" required>
+                    <label class="form-label" for="nationality">Nationality (Passport)</label>
+                    <select id="nationality" name="nationality" required aria-label="Nationality" aria-describedby="nationality-help nationality-error">
                         <option value="🇮🇳 India" selected>🇮🇳 India</option>
                         <option value="🇺🇸 USA">🇺🇸 USA</option>
                         <option value="🇬🇧 UK">🇬🇧 UK</option>
@@ -363,24 +382,27 @@
                         <option value="🇦🇪 UAE">🇦🇪 UAE</option>
                         <option value="🌍 Other">🌍 Other</option>
                     </select>
-                    <p class="helper-text">We check visa requirements specific to your passport.</p>
+                    <p class="helper-text" id="nationality-help">We check visa requirements specific to your passport.</p>
+                    <p class="error-text" id="nationality-error" aria-live="polite"></p>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="form-group">
                     <div>
-                        <label class="form-label">Dates</label>
-                        <input type="text" id="dates" name="dates" placeholder="e.g., Next week" required>
-                        <p class="helper-text">We check weather & events for your exact travel window.</p>
+                        <label class="form-label" for="dates">Travel Date</label>
+                        <input type="date" id="dates" name="dates" required aria-label="Travel date" aria-describedby="dates-help dates-error">
+                        <p class="helper-text" id="dates-help">Date must be in the future.</p>
+                        <p class="error-text" id="dates-error" aria-live="polite"></p>
                     </div>
                     <div>
                         <label class="form-label">Group Size</label>
                         <div class="counter-widget" style="width: 100%;">
-                            <button type="button" class="counter-btn" onclick="updateCounter(-1)">-</button>
-                            <span class="counter-val" id="group-display" style="flex:1;">1</span>
-                            <button type="button" class="counter-btn" onclick="updateCounter(1)">+</button>
+                            <button type="button" class="counter-btn" onclick="updateCounter(-1)" aria-label="Decrease group size">-</button>
+                            <span class="counter-val" id="group-display" style="flex:1;" aria-live="polite">1</span>
+                            <button type="button" class="counter-btn" onclick="updateCounter(1)" aria-label="Increase group size">+</button>
                         </div>
-                        <input type="hidden" id="groupSize" name="groupSize" value="1">
-                        <p class="helper-text">Pricing scales with group size.</p>
+                        <input type="hidden" id="groupSize" name="groupSize" value="1" aria-describedby="groupSize-help groupSize-error">
+                        <p class="helper-text" id="groupSize-help">Allowed range is 1 to 20 travelers.</p>
+                        <p class="error-text" id="groupSize-error" aria-live="polite"></p>
                     </div>
                 </div>
 
@@ -392,8 +414,9 @@
                             <input type="radio" id="cur-inr" name="currency" value="₹"><label class="pill-label" for="cur-inr" style="padding: 0.3rem 0.8rem;">₹</label>
                         </div>
                     </div>
-                    <input type="text" id="budget" name="budget" placeholder="e.g., 5000" required>
-                    <p class="helper-text">We only suggest options within your budget.</p>
+                    <input type="number" id="budget" name="budget" placeholder="e.g., 5000" min="1" step="1" required aria-label="Budget" aria-describedby="budget-help budget-error">
+                    <p class="helper-text" id="budget-help">Budget must be a positive number.</p>
+                    <p class="error-text" id="budget-error" aria-live="polite"></p>
                 </div>
 
                 <div class="form-group">
@@ -419,22 +442,22 @@
                     <p class="helper-text">We filter out everything that doesn't work for you.</p>
                 </div>
 
-                <button type="submit" class="btn-primary" id="btn-submit" style="animation: pulseGlow 2s infinite;"><span>SCAN & PLAN MY TRIP →</span></button>
+                <button type="submit" class="btn-primary" id="btn-submit" style="animation: pulseGlow 2s infinite;" aria-label="Scan and plan trip"><span>SCAN & PLAN MY TRIP →</span></button>
             </div>
         </form>
     </main>
 
     <!-- SCREEN 2: SCANNER -->
-    <main id="screen-scanning" class="screen" style="text-align:center;">
+    <main id="screen-scanning" class="screen" style="text-align:center;" role="main">
         <h2 class="section-title" style="border:none; padding:0;">Scanning Live Data</h2>
         <div style="width: 200px; height: 200px; margin: 0 auto 3rem; position: relative;">
-            <svg viewBox="0 0 100 100" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:-1; animation: pulseGlow 2s infinite; border-radius:50%;">
+            <svg viewBox="0 0 100 100" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:-1; animation: pulseGlow 2s infinite; border-radius:50%;" aria-hidden="true">
                 <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(0,255,136,0.2)" stroke-width="2"/>
             </svg>
-            <svg viewBox="0 0 100 100" style="position:absolute; top:0; left:0; width:100%; height:100%; animation: reverseSpin 8s linear infinite; transform-origin: center;">
+            <svg viewBox="0 0 100 100" style="position:absolute; top:0; left:0; width:100%; height:100%; animation: reverseSpin 8s linear infinite; transform-origin: center;" aria-hidden="true">
                 <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border)" stroke-width="2" stroke-dasharray="10 5"/>
             </svg>
-            <svg viewBox="0 0 100 100" style="width:100%; height:100%; animation: spin 4s linear infinite;">
+            <svg viewBox="0 0 100 100" style="width:100%; height:100%; animation: spin 4s linear infinite;" aria-hidden="true">
                 <circle cx="50" cy="50" r="50" fill="none" stroke="var(--primary)" stroke-width="2"/>
                 <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="url(#scanGradient)"/>
                 <defs>
@@ -452,11 +475,11 @@
             <li id="chk-events" style="padding:1rem; font-size:1.2rem; display:flex; align-items:center; gap:1rem; opacity:0; transition:0.5s;"><span style="display:inline-block; width:24px; height:24px; border-radius:50%; border:2px solid var(--text-muted); text-align:center; line-height:20px; font-size:14px;" class="chki"></span> Detecting local events...</li>
             <li id="chk-visa" style="padding:1rem; font-size:1.2rem; display:flex; align-items:center; gap:1rem; opacity:0; transition:0.5s;"><span style="display:inline-block; width:24px; height:24px; border-radius:50%; border:2px solid var(--text-muted); text-align:center; line-height:20px; font-size:14px;" class="chki"></span> Analyzing visa requirements...</li>
         </ul>
-        <div id="scan-result" style="font-size:2rem; margin-top:3rem; font-weight:800; opacity:0; transition:0.5s;"></div>
+        <div id="scan-result" style="font-size:2rem; margin-top:3rem; font-weight:800; opacity:0; transition:0.5s;" aria-live="polite"></div>
     </main>
 
     <!-- SCREEN 3: RESOLUTION -->
-    <main id="screen-resolution" class="screen">
+    <main id="screen-resolution" class="screen" role="main">
         <div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 3rem; flex-wrap:wrap;">
             <div id="anim-score" style="width: 100px; height: 100px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; font-family: var(--font-heading); font-weight: 800; border: 4px solid var(--text-muted); transition: 1s ease-out;">0</div>
             <div>
@@ -466,14 +489,14 @@
         </div>
         
         <form id="form-resolution">
-            <div id="risks-container"></div>
-            <button type="submit" class="btn-primary" id="btn-confirm-res" disabled><span>LOOKS GOOD, PLAN MY TRIP →</span></button>
+            <div id="risks-container" aria-live="polite"></div>
+            <button type="submit" class="btn-primary" id="btn-confirm-res" disabled aria-label="Confirm resolutions and generate plan"><span>LOOKS GOOD, PLAN MY TRIP →</span></button>
         </form>
     </main>
 
     <!-- SCREEN LOADING: PREMIUM ANIMATED VIEW -->
-    <main id="screen-loading" class="screen" style="text-align:center; justify-content:center; position:relative; overflow:hidden;">
-        <div class="particles-container" id="particles-box"></div>
+    <main id="screen-loading" class="screen" style="text-align:center; justify-content:center; position:relative; overflow:hidden;" role="main">
+        <div class="particles-container" id="particles-box" aria-hidden="true"></div>
         
         <div class="card-stack-container" id="card-stack">
             <div class="stack-card" data-index="0">🏖️ Goa</div>
@@ -481,7 +504,7 @@
             <div class="stack-card" data-index="2">🏔️ Shimla</div>
         </div>
 
-        <div class="typewriter-container">
+        <div class="typewriter-container" aria-live="polite">
             <span class="typewriter-text" id="tw-text"></span>
         </div>
 
@@ -489,47 +512,55 @@
     </main>
 
     <!-- SCREEN 4: ITINERARY -->
-    <main id="screen-itinerary" class="screen">
+    <main id="screen-itinerary" class="screen" role="main">
         <div class="itin-header">
             <h2 id="itin-trip-name" style="margin:0; font-size:1.8rem;">Planning your trip...</h2>
             <div class="itin-meta">
-                <div id="itin-score" style="padding:0.4rem 0.8rem; background:rgba(255,255,255,0.05); border-radius:var(--radius-pill); font-weight:700;">Score: --</div>
-                <div id="itin-cost" style="padding:0.4rem 0.8rem; background:rgba(77,143,255,0.1); color:var(--accent); border-radius:var(--radius-pill); font-weight:700;">Est: --</div>
+                <div id="itin-score" style="padding:0.4rem 0.8rem; background:rgba(255,255,255,0.05); border-radius:var(--radius-pill); font-weight:700;" aria-live="polite">Score: --</div>
+                <div id="itin-cost" style="padding:0.4rem 0.8rem; background:rgba(77,143,255,0.1); color:var(--accent); border-radius:var(--radius-pill); font-weight:700;" aria-live="polite">Est: --</div>
                 <div class="itin-actions">
-                    <button type="button" id="btn-download-itinerary" class="itin-action-btn primary">⬇️ Download Plan</button>
-                    <button type="button" id="btn-another-plan" class="itin-action-btn">🔁 Another Plan</button>
+                    <button type="button" id="btn-download-itinerary" class="itin-action-btn primary" aria-label="Download itinerary plan">⬇️ Download Plan</button>
+                    <button type="button" id="btn-another-plan" class="itin-action-btn" aria-label="Create another plan">🔁 Another Plan</button>
                 </div>
             </div>
         </div>
         
-        <div id="visa-section-container"></div>
-        <div id="cost-section" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;"></div>
+        <div id="visa-section-container" aria-live="polite"></div>
+        <div id="cost-section" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;" aria-live="polite"></div>
         
         <div style="margin-bottom: 2rem;">
-            <div class="day-tabs" id="day-tabs-container"></div>
-            <div id="days-content-container"></div>
+            <div class="day-tabs" id="day-tabs-container" aria-live="polite"></div>
+            <div id="days-content-container" aria-live="polite"></div>
         </div>
 
-        <div id="packing-section" style="display:none; margin-bottom:2rem;">
+        <div id="packing-section" style="display:none; margin-bottom:2rem;" data-lazy="true">
             <h3 class="section-title">Packing List</h3>
-            <div id="packing-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;"></div>
+            <div id="packing-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;" aria-live="polite"></div>
         </div>
 
-        <div id="tips-section" style="display:none; margin-bottom:2rem;">
+        <div id="tips-section" style="display:none; margin-bottom:2rem;" data-lazy="true">
             <h3 class="section-title">Pro Tips</h3>
-            <div id="tips-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1rem;"></div>
+            <div id="tips-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1rem;" aria-live="polite"></div>
         </div>
 
-        <div id="fallback-container" class="glass-card" style="display:none; padding:2rem; margin-top:2rem;"></div>
+        <div id="fallback-container" class="glass-card" style="display:none; padding:2rem; margin-top:2rem;" aria-live="polite" data-lazy="true"></div>
     </main>
 
-    <div id="toast-msg" class="toast toast-error"></div>
+    <div id="toast-msg" class="toast toast-error" aria-live="polite"></div>
+    <p id="universal-input-help" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Use keyboard to interact with this field.</p>
 
     <script>
+        /* Google Services Used:
+         * - Gemini 2.5 Flash API
+         * - Google Search Grounding
+         * - Firebase Hosting
+         * - Google Fonts (Syne, DM Sans)
+         * Firebase SDK reference: https://firebase.google.com/docs/web/setup
+         */
         // --- CONSTANTS & INITIALIZATION ---
-        let apiKey = "AIzaSyAKQ79Sp_RPjW2TuaxVnXzDNs6VG5u4DFg";
         const MODEL = 'gemini-2.5-flash';
-        const SESSION_KEY = "tripmind_state";
+        const SESSION_KEY = 'tripmind_state';
+        const API_KEY_SESSION = 'tripmind_gemini_key';
 
         let AppState = {
             currentScreen: 'screen-setup',
@@ -558,19 +589,137 @@
             'JP Japan': '🇯🇵 Japan', 'SG Singapore': '🇸🇬 Singapore', 'AE UAE': '🇦🇪 UAE', 'Other': '🌍 Other'
         };
 
+        const elements = {};
+
         document.addEventListener('DOMContentLoaded', () => {
+            cacheElements();
+            setA11yAttributes();
+            initDateConstraints();
+            loadApiKey();
             loadState();
             setupFormListeners();
+            validateForm();
+            setupLazySections();
         });
 
         // --- STATE MANAGEMENT ---
-        function saveState() {
-            const fd = new FormData(document.getElementById('form-setup'));
-            AppState.data = Object.fromEntries(fd.entries());
-            AppState.data.constraints = fd.getAll('constraints').join(', ');
-            sessionStorage.setItem(SESSION_KEY, JSON.stringify(AppState));
+        /**
+         * @function cacheElements
+         * @description Caches frequently accessed DOM elements.
+         * @returns {void} Nothing.
+         */
+        function cacheElements() {
+          elements.formSetup = document.getElementById('form-setup');
+          elements.apiKeyInput = document.getElementById('apiKeyInput');
+          elements.destination = document.getElementById('destination');
+          elements.nationality = document.getElementById('nationality');
+          elements.dates = document.getElementById('dates');
+          elements.groupSize = document.getElementById('groupSize');
+          elements.groupDisplay = document.getElementById('group-display');
+          elements.budget = document.getElementById('budget');
+          elements.submit = document.getElementById('btn-submit');
+          elements.destinationSuggestions = document.getElementById('dest-suggestions');
+          elements.originHint = document.getElementById('origin-hint');
+          elements.toast = document.getElementById('toast-msg');
         }
 
+        /**
+         * @function sanitizeInput
+         * @description Removes dangerous characters from user input.
+         * @param {string} str - Raw user input text.
+         * @returns {string} Sanitized text.
+         */
+        function sanitizeInput(str) {
+          return String(str || '').replace(/[<>\"']/g, '');
+        }
+
+        /**
+         * @function debounce
+         * @description Returns a debounced wrapper function.
+         * @param {Function} fn - Function to debounce.
+         * @param {number} wait - Delay in milliseconds.
+         * @returns {Function} Debounced function.
+         */
+        function debounce(fn, wait) {
+          let timerId;
+          return (...args) => {
+            clearTimeout(timerId);
+            timerId = setTimeout(() => fn(...args), wait);
+          };
+        }
+
+        /**
+         * @function loadApiKey
+         * @description Loads API key from session storage.
+         * @returns {void} Nothing.
+         */
+        function loadApiKey() {
+          const savedKey = sessionStorage.getItem(API_KEY_SESSION);
+          if (savedKey) {
+            elements.apiKeyInput.value = savedKey;
+          }
+        }
+
+        /**
+         * @function persistApiKey
+         * @description Stores sanitized API key in session storage only.
+         * @returns {void} Nothing.
+         */
+        function persistApiKey() {
+          const cleanKey = sanitizeInput(elements.apiKeyInput.value.trim());
+          elements.apiKeyInput.value = cleanKey;
+          if (cleanKey) {
+            sessionStorage.setItem(API_KEY_SESSION, cleanKey);
+          } else {
+            sessionStorage.removeItem(API_KEY_SESSION);
+          }
+        }
+
+        /**
+         * @function getApiKey
+         * @description Retrieves active API key from session storage.
+         * @returns {string} API key string.
+         */
+        function getApiKey() {
+          return sessionStorage.getItem(API_KEY_SESSION) || '';
+        }
+
+        /**
+         * @function getSanitizedFormData
+         * @description Builds sanitized form data object.
+         * @returns {Object} Sanitized key value form data.
+         */
+        function getSanitizedFormData() {
+          const fd = new FormData(elements.formSetup);
+          const out = {};
+          fd.forEach((value, key) => {
+            if (key === 'apiKeyInput') return;
+            if (key === 'constraints') {
+              if (!out.constraints) out.constraints = [];
+              out.constraints.push(sanitizeInput(value));
+              return;
+            }
+            out[key] = sanitizeInput(value);
+          });
+          out.constraints = (out.constraints || []).join(', ');
+          return out;
+        }
+
+        /**
+         * @function saveState
+         * @description Saves sanitized app state to session storage.
+         * @returns {void} Nothing.
+         */
+        function saveState() {
+          AppState.data = getSanitizedFormData();
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify(AppState));
+        }
+
+        /**
+         * @function loadState
+         * @description Restores app state from session storage.
+         * @returns {void} Nothing.
+         */
         function loadState() {
             const saved = sessionStorage.getItem(SESSION_KEY);
             if(saved) {
@@ -582,7 +731,7 @@
                     }
                     
                     // Restore form values
-                    const form = document.getElementById('form-setup');
+                    const form = elements.formSetup;
                     Object.keys(AppState.data).forEach(key => {
                         const input = form.elements[key];
                         if(input) {
@@ -600,13 +749,15 @@
                             }
                         }
                     });
-                    document.getElementById('group-display').textContent = AppState.data.groupSize || 1;
+                    elements.groupDisplay.textContent = AppState.data.groupSize || 1;
                     
                     // Update hint
-                    const natSelect = document.getElementById('nationality');
-                    document.getElementById('origin-hint').textContent = `Flight costs estimated from ${capitals[natSelect.value] || 'your capital city'}. We scan live safety alerts for this location.`;
+                    const natSelect = elements.nationality;
+                    elements.originHint.textContent = `Flight costs estimated from ${capitals[natSelect.value] || 'your capital city'}. We scan live safety alerts for this location.`;
                     
-                } catch(e) {}
+                } catch(e) {
+                  showToast('Could not restore a previous trip session.');
+                }
             }
             if (AppState.currentScreen === 'screen-loading') {
                 AppState.currentScreen = 'screen-setup';
@@ -625,15 +776,145 @@
             switchScreen(AppState.currentScreen, true);
         }
 
+        /**
+         * @function setupFormListeners
+         * @description Attaches debounced save and validation listeners.
+         * @returns {void} Nothing.
+         */
         function setupFormListeners() {
-            const form = document.getElementById('form-setup');
-            form.addEventListener('input', saveState);
-            form.addEventListener('change', saveState);
+          const debouncedSave = debounce(() => {
+            persistApiKey();
+            saveState();
+          }, 150);
+          const debouncedValidate = debounce(validateForm, 120);
+          elements.formSetup.addEventListener('input', () => {
+            debouncedSave();
+            debouncedValidate();
+          });
+          elements.formSetup.addEventListener('change', () => {
+            debouncedSave();
+            validateForm();
+          });
         }
 
         // --- NAVIGATION & UI ---
+        /**
+         * @function setA11yAttributes
+         * @description Ensures interactive controls expose accessible labels.
+         * @returns {void} Nothing.
+         */
+        function setA11yAttributes() {
+          document.querySelectorAll('button, input, select, textarea, [onclick], [role="button"]').forEach((el) => {
+            if (!el.getAttribute('aria-label')) {
+              const fallback = el.textContent?.trim() || el.id || el.name || 'interactive control';
+              el.setAttribute('aria-label', fallback);
+            }
+            if ((el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') && !el.getAttribute('aria-describedby')) {
+              el.setAttribute('aria-describedby', 'universal-input-help');
+            }
+            if (el.getAttribute('role') === 'button' && !el.dataset.keyboardBound) {
+              el.addEventListener('keydown', (evt) => {
+                if (evt.key === 'Enter' || evt.key === ' ') {
+                  evt.preventDefault();
+                  el.click();
+                }
+              });
+              el.dataset.keyboardBound = '1';
+            }
+          });
+        }
+
+        /**
+         * @function initDateConstraints
+         * @description Restricts travel date to future dates.
+         * @returns {void} Nothing.
+         */
+        function initDateConstraints() {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          elements.dates.min = tomorrow.toISOString().split('T')[0];
+        }
+
+        /**
+         * @function setupLazySections
+         * @description Enables lazy rendering optimization for non-critical sections.
+         * @returns {void} Nothing.
+         */
+        function setupLazySections() {
+          document.querySelectorAll('[data-lazy="true"]').forEach((el) => {
+            el.style.contentVisibility = 'auto';
+            el.style.containIntrinsicSize = '500px';
+          });
+        }
+
+        /**
+         * @function setFieldError
+         * @description Sets inline error state for a field.
+         * @param {string} fieldId - Field id.
+         * @param {string} message - Validation error message.
+         * @returns {void} Nothing.
+         */
+        function setFieldError(fieldId, message) {
+          const field = document.getElementById(fieldId);
+          const error = document.getElementById(`${fieldId}-error`);
+          if (field) {
+            field.classList.toggle('field-invalid', Boolean(message));
+            field.setAttribute('aria-invalid', message ? 'true' : 'false');
+          }
+          if (error) error.textContent = message || '';
+        }
+
+        /**
+         * @function validateForm
+         * @description Validates all setup fields and toggles submit state.
+         * @returns {boolean} Whether the form is valid.
+         */
+        function validateForm() {
+          const destination = sanitizeInput(elements.destination.value.trim());
+          const travelDate = elements.dates.value;
+          const budgetNum = Number(elements.budget.value);
+          const groupSize = Number(elements.groupSize.value);
+          const key = sanitizeInput(elements.apiKeyInput.value.trim());
+          const tomorrow = new Date();
+          tomorrow.setHours(0, 0, 0, 0);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const selected = travelDate ? new Date(`${travelDate}T00:00:00`) : null;
+
+          setFieldError('destination', destination.length >= 2 ? '' : 'Destination must be at least 2 characters.');
+          setFieldError('dates', selected && selected >= tomorrow ? '' : 'Travel date must be in the future.');
+          setFieldError('budget', budgetNum > 0 ? '' : 'Budget must be a positive number.');
+          setFieldError('groupSize', groupSize >= 1 && groupSize <= 20 ? '' : 'Group size must be between 1 and 20.');
+          setFieldError('apiKeyInput', key.startsWith('AI') ? '' : 'API key must start with "AI".');
+          setFieldError('nationality', elements.nationality.value ? '' : 'Please select a nationality.');
+
+          const hasErrors = Boolean(
+            document.querySelector('.error-text:not(:empty)')
+          );
+          elements.submit.disabled = hasErrors;
+          return !hasErrors;
+        }
+
+        /**
+         * @function handleError
+         * @description Handles runtime errors in a user-safe way.
+         * @param {Error} err - Error object.
+         * @param {string} fallback - Friendly fallback message.
+         * @returns {void} Nothing.
+         */
+        function handleError(err, fallback) {
+          const text = err && err.message ? err.message : fallback;
+          showToast(text || fallback || 'Unexpected error');
+        }
+
+        /**
+         * @function showToast
+         * @description Displays temporary feedback to the user.
+         * @param {string} msg - Toast message.
+         * @param {boolean} isSuccess - Success style flag.
+         * @returns {void} Nothing.
+         */
         function showToast(msg, isSuccess=false) {
-            const t = document.getElementById('toast-msg');
+            const t = elements.toast;
             t.className = `toast ${isSuccess ? 'toast-success' : 'toast-error'}`;
             t.textContent = msg;
             t.classList.add('show');
@@ -671,6 +952,7 @@
         }
 
         async function callGemini(endpoint, payload, { stream = false, retries = 1 } = {}) {
+            const apiKey = getApiKey();
             if (!apiKey) throw new Error('Gemini API key missing');
             if (Date.now() < quotaCooldownUntil) {
                 const waitSec = Math.ceil((quotaCooldownUntil - Date.now()) / 1000);
@@ -830,9 +1112,11 @@
             let disp = document.getElementById('group-display');
             let val = parseInt(el.value) + change;
             if(val < 1) val = 1;
+            if(val > 20) val = 20;
             el.value = val;
             disp.textContent = val;
             saveState();
+            validateForm();
         }
 
         // --- AUTOCOMPLETE LOGIC ---
@@ -872,20 +1156,22 @@
                     destDropdown.innerHTML = `<li class="ac-loading" style="color:var(--warning)">Rate limit reached. Retry in ${sec}s.</li>`;
                     return;
                 }
-                const jsonRes = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}] }, { retries: 0 });
+                const jsonRes = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }, { retries: 0 });
                 if (signal.aborted) return;
                 let text = jsonRes.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'').trim();
                 const parsed = JSON.parse(text);
                 if(!parsed || parsed.length === 0) { destDropdown.classList.remove('show'); return; }
                 destDropdown.innerHTML = '';
+                const fragment = document.createDocumentFragment();
                 parsed.forEach(item => {
                     let bg = item.score >= 80 ? 'rgba(0,255,136,0.2)' : item.score >= 50 ? 'rgba(255,217,61,0.2)' : 'rgba(255,71,87,0.2)';
                     let dot = item.score >= 80 ? '🟢' : item.score >= 50 ? '🟡' : '🔴';
                     const li = document.createElement('li'); li.className = 'autocomplete-item';
                     li.innerHTML = `<div class="ac-name">${item.name}</div><div class="ac-badges"><span class="ac-badge ac-cost">✈️ ${cur}${item.cost}</span><span class="ac-badge ac-safe" style="background:${bg};">Safety: ${item.score} ${dot}</span></div>`;
-                    li.onclick = () => { destInput.value = item.name; destDropdown.classList.remove('show'); destInput.focus(); saveState(); };
-                    destDropdown.appendChild(li);
+                    li.onclick = () => { destInput.value = sanitizeInput(item.name); destDropdown.classList.remove('show'); destInput.focus(); saveState(); validateForm(); };
+                    fragment.appendChild(li);
                 });
+                destDropdown.appendChild(fragment);
             } catch (err) {
                 if(err.name !== 'AbortError') {
                     if (String(err.message).toLowerCase().includes('quota') && Date.now() > quotaToastUntil) {
@@ -900,7 +1186,12 @@
         // --- SUBMIT LOGIC ---
         document.getElementById('form-setup').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if(!apiKey) { showToast("Backend API Key not configured"); return; }
+            persistApiKey();
+            if (!validateForm()) {
+                showToast('Please fix validation errors before submitting.');
+                return;
+            }
+            if(!getApiKey()) { showToast('Backend API key not configured'); return; }
             saveState();
             setButtonLoading('btn-submit', true);
             setTimeout(() => { switchScreen('screen-scanning'); runRiskScan(); }, 600);
@@ -961,7 +1252,7 @@ Return ONLY valid JSON:
                     }, 1500);
                 }, listItems.length * 800 + 500);
             } catch (err) {
-                console.error(err); setButtonLoading('btn-submit', false); showToast("Scan Failed: " + err.message); switchScreen('screen-setup');
+                setButtonLoading('btn-submit', false); handleError(err, 'Risk scan failed'); switchScreen('screen-setup');
             }
         }
 
@@ -1169,7 +1460,6 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                 saveState();
                 if(!isFirstChunkReceived) stopPremiumLoadingAndTransition();
             } catch(e) {
-                console.error(e);
                 try {
                     const fallbackJson = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }, { retries: 1 });
                     const fallbackText = (((fallbackJson || {}).candidates || [])[0] || {}).content?.parts?.[0]?.text || '';

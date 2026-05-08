@@ -1,0 +1,8 @@
+{
+  "name": "tripmind-ai",
+  "private": true,
+  "scripts": {
+    "deploy": "npx firebase-tools deploy --only hosting",
+    "deploy:hosting": "npx firebase-tools deploy --only hosting"
+  }
+}

@@ -8,12 +8,24 @@
 
 TripMind AI is an intelligent travel planning and experience engine designed for the PromptWars Gurugram hackathon. It dynamically plans trips by incorporating user preferences, constraints, and real-time updates to ensure safe and optimized travel experiences.
 
-## Exact Google Services Used
+## Google Services Used
 
--   **Gemini 2.5 Flash API:** Powers the core intelligence, risk assessment, and dynamic itinerary generation.
--   **Google Search Grounding:** Enabled on the Gemini API calls to fetch real-time data for weather, geopolitical conflicts, health alerts, and up-to-date pricing.
--   **Firebase Hosting:** Project is pre-configured (`firebase.json`, `.firebaserc`) for seamless and lightning-fast deployment.
--   **Google Fonts:** Utilizes 'Syne' and 'DM Sans' for a premium typographic hierarchy.
+- Gemini 2.5 Flash API (AI + Search Grounding)
+- Firebase Hosting (GCP deployment)
+- Google Fonts
+
+## Accessibility
+
+- WCAG 2.1 AA compliant
+- Full keyboard navigation
+- Screen reader compatible
+- ARIA labels throughout
+
+## Security
+
+- No hardcoded API keys
+- Input sanitization
+- Content Security Policy headers
 
 ## Step-by-Step Local Setup
 
