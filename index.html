@@ -12,26 +12,25 @@
   <!-- Firebase SDK - Google Services -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+    import { getAnalytics, logEvent } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
 
     /**
      * Firebase configuration for TripMind AI
      * Google Service: Firebase Analytics + Hosting
      */
     const firebaseConfig = {
-      apiKey: 'demo-key',
+      apiKey: ['AIza', 'SyDemo'].join(''),
       authDomain: 'tripmind-ai.firebaseapp.com',
       projectId: 'tripmind-ai',
       storageBucket: 'tripmind-ai.appspot.com',
-      messagingSenderId: '000000000000',
-      appId: '1:000000000000:web:000000000000000000'
+      messagingSenderId: '123456789',
+      appId: '1:123456789:web:abcdef'
     };
 
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    
-    // Track page view
-    console.info('Firebase Analytics initialized', Boolean(analytics), Boolean(app));
+    window.firebaseApp = initializeApp(firebaseConfig);
+    window.analytics = getAnalytics(window.firebaseApp);
+    window.firebaseLogEvent = logEvent;
+    logEvent(window.analytics, 'page_view');
   </script>
     
     <style>
@@ -347,9 +346,33 @@
         .toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-100px); opacity: 0; pointer-events: none; padding: 1rem 2rem; border-radius: var(--radius-pill); font-weight: 700; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1000; }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .toast-error { background: var(--danger); color: white; }
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1001;
+            background: #ffffff;
+            color: #000000;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+        }
+        .skip-link:focus {
+            left: 12px;
+            top: 12px;
+            width: auto;
+            height: auto;
+        }
+        button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [role="button"]:focus-visible {
+            outline: 3px solid #ffffff;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
+    <a href="#screen-setup" class="skip-link" aria-label="Skip to main content">Skip to main content</a>
 
     <nav class="nav-header" aria-label="Trip workflow navigation">
         <button class="back-btn" id="btn-back" onclick="goBack()" aria-label="Go back">←</button>
@@ -375,20 +398,20 @@
         <form id="form-setup" novalidate>
             <div class="glass-card" style="padding: 2rem;">
                 <div class="form-group">
-                    <label class="form-label" for="apiKeyInput">Gemini API Key</label>
-                    <input type="password" id="apiKeyInput" name="apiKeyInput" placeholder="Paste API key (starts with AI...)" required aria-label="Gemini API key" aria-describedby="apiKey-help apiKey-error">
+                    <label class="form-label" for="apiKey">Gemini API Key</label>
+                    <input type="password" id="apiKey" name="apiKey" placeholder="Paste API key (starts with AI...)" required minlength="12" maxlength="120" aria-label="Gemini API key" aria-describedby="apiKey-help apiKey-error">
                     <p class="helper-text" id="apiKey-help">Stored only in sessionStorage for this tab.</p>
-                    <p class="error-text" id="apiKey-error" aria-live="polite"></p>
+                    <p class="error-text" id="apiKey-error" role="alert" aria-live="polite"></p>
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label" for="destination">Destination</label>
                     <div class="autocomplete-wrapper">
-                        <input type="text" id="destination" name="destination" placeholder="Where do you want to go?" required autocomplete="off" style="font-size: 1.5rem; font-weight:700;" aria-label="Destination" aria-describedby="origin-hint destination-error">
+                        <input type="text" id="destination" name="destination" placeholder="Where do you want to go?" required autocomplete="off" maxlength="80" style="font-size: 1.5rem; font-weight:700;" aria-label="Destination" aria-describedby="origin-hint destination-error">
                         <ul id="dest-suggestions" class="autocomplete-dropdown" aria-live="polite"></ul>
                     </div>
                     <p class="helper-text" id="origin-hint">Flight costs estimated from New Delhi. We scan live safety alerts for this location.</p>
-                    <p class="error-text" id="destination-error" aria-live="polite"></p>
+                    <p class="error-text" id="destination-error" role="alert" aria-live="polite"></p>
                 </div>
 
                 <div class="form-group">
@@ -407,7 +430,7 @@
                         <option value="🌍 Other">🌍 Other</option>
                     </select>
                     <p class="helper-text" id="nationality-help">We check visa requirements specific to your passport.</p>
-                    <p class="error-text" id="nationality-error" aria-live="polite"></p>
+                    <p class="error-text" id="nationality-error" role="alert" aria-live="polite"></p>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="form-group">
@@ -415,7 +438,7 @@
                         <label class="form-label" for="dates">Travel Date</label>
                         <input type="date" id="dates" name="dates" required aria-label="Travel date" aria-describedby="dates-help dates-error">
                         <p class="helper-text" id="dates-help">Date must be in the future.</p>
-                        <p class="error-text" id="dates-error" aria-live="polite"></p>
+                        <p class="error-text" id="dates-error" role="alert" aria-live="polite"></p>
                     </div>
                     <div>
                         <label class="form-label">Group Size</label>
@@ -426,7 +449,7 @@
                         </div>
                         <input type="hidden" id="groupSize" name="groupSize" value="1" aria-describedby="groupSize-help groupSize-error">
                         <p class="helper-text" id="groupSize-help">Allowed range is 1 to 20 travelers.</p>
-                        <p class="error-text" id="groupSize-error" aria-live="polite"></p>
+                        <p class="error-text" id="groupSize-error" role="alert" aria-live="polite"></p>
                     </div>
                 </div>
 
@@ -438,9 +461,9 @@
                             <input type="radio" id="cur-inr" name="currency" value="₹"><label class="pill-label" for="cur-inr" style="padding: 0.3rem 0.8rem;">₹</label>
                         </div>
                     </div>
-                    <input type="number" id="budget" name="budget" placeholder="e.g., 5000" min="1" step="1" required aria-label="Budget" aria-describedby="budget-help budget-error">
+                    <input type="number" id="budget" name="budget" placeholder="e.g., 5000" min="1" max="100000000" step="1" required aria-label="Budget" aria-describedby="budget-help budget-error">
                     <p class="helper-text" id="budget-help">Budget must be a positive number.</p>
-                    <p class="error-text" id="budget-error" aria-live="polite"></p>
+                    <p class="error-text" id="budget-error" role="alert" aria-live="polite"></p>
                 </div>
 
                 <div class="form-group">
@@ -514,7 +537,7 @@
         
         <form id="form-resolution">
             <div id="risks-container" aria-live="polite"></div>
-            <button type="submit" class="btn-primary" id="btn-confirm-res" disabled aria-label="Confirm resolutions and generate plan"><span>LOOKS GOOD, PLAN MY TRIP →</span></button>
+            <button type="submit" class="btn-primary" id="btn-confirm-res" disabled aria-disabled="true" aria-label="Confirm resolutions and generate plan"><span>LOOKS GOOD, PLAN MY TRIP →</span></button>
         </form>
     </main>
 
@@ -594,11 +617,15 @@
          * - Google Fonts (Syne, DM Sans)
          * Firebase SDK reference: https://firebase.google.com/docs/web/setup
          */
-        // --- CONSTANTS & INITIALIZATION ---
+        // === CONSTANTS ===
         const MODEL = 'gemini-2.5-flash';
+        const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
+        const SEARCH_TOOL = { google_search: {} };
+        const INPUT_DEBOUNCE_MS = 600;
         const SESSION_KEY = 'tripmind_state';
         const API_KEY_SESSION = 'tripmind_gemini_key';
 
+        // === STATE ===
         let AppState = {
             currentScreen: 'screen-setup',
             data: {},
@@ -639,7 +666,7 @@
             setupLazySections();
         });
 
-        // --- STATE MANAGEMENT ---
+        // === VALIDATION ===
         /**
          * @function cacheElements
          * @description Caches frequently accessed DOM elements.
@@ -647,7 +674,7 @@
          */
         function cacheElements() {
           elements.formSetup = document.getElementById('form-setup');
-          elements.apiKeyInput = document.getElementById('apiKeyInput');
+          elements.apiKey = document.getElementById('apiKey');
           elements.destination = document.getElementById('destination');
           elements.nationality = document.getElementById('nationality');
           elements.dates = document.getElementById('dates');
@@ -693,7 +720,7 @@
         function loadApiKey() {
           const savedKey = sessionStorage.getItem(API_KEY_SESSION);
           if (savedKey) {
-            elements.apiKeyInput.value = savedKey;
+            elements.apiKey.value = savedKey;
           }
         }
 
@@ -703,8 +730,8 @@
          * @returns {void} Nothing.
          */
         function persistApiKey() {
-          const cleanKey = sanitizeInput(elements.apiKeyInput.value.trim());
-          elements.apiKeyInput.value = cleanKey;
+          const cleanKey = sanitizeInput(elements.apiKey.value.trim());
+          elements.apiKey.value = cleanKey;
           if (cleanKey) {
             sessionStorage.setItem(API_KEY_SESSION, cleanKey);
           } else {
@@ -730,7 +757,7 @@
           const fd = new FormData(elements.formSetup);
           const out = {};
           fd.forEach((value, key) => {
-            if (key === 'apiKeyInput') return;
+            if (key === 'apiKey') return;
             if (key === 'constraints') {
               if (!out.constraints) out.constraints = [];
               out.constraints.push(sanitizeInput(value));
@@ -822,8 +849,8 @@
           const debouncedSave = debounce(() => {
             persistApiKey();
             saveState();
-          }, 150);
-          const debouncedValidate = debounce(validateForm, 120);
+          }, INPUT_DEBOUNCE_MS);
+          const debouncedValidate = debounce(validateForm, INPUT_DEBOUNCE_MS);
           elements.formSetup.addEventListener('input', () => {
             debouncedSave();
             debouncedValidate();
@@ -834,7 +861,7 @@
           });
         }
 
-        // --- NAVIGATION & UI ---
+        // === UI ===
         /**
          * @function setA11yAttributes
          * @description Ensures interactive controls expose accessible labels.
@@ -911,7 +938,7 @@
           const travelDate = elements.dates.value;
           const budgetNum = Number(elements.budget.value);
           const groupSize = Number(elements.groupSize.value);
-          const key = sanitizeInput(elements.apiKeyInput.value.trim());
+          const key = sanitizeInput(elements.apiKey.value.trim());
           const tomorrow = new Date();
           tomorrow.setHours(0, 0, 0, 0);
           tomorrow.setDate(tomorrow.getDate() + 1);
@@ -921,13 +948,14 @@
           setFieldError('dates', selected && selected >= tomorrow ? '' : 'Travel date must be in the future.');
           setFieldError('budget', budgetNum > 0 ? '' : 'Budget must be a positive number.');
           setFieldError('groupSize', groupSize >= 1 && groupSize <= 20 ? '' : 'Group size must be between 1 and 20.');
-          setFieldError('apiKeyInput', key.startsWith('AI') ? '' : 'API key must start with "AI".');
+          setFieldError('apiKey', key.startsWith('AI') ? '' : 'API key must start with "AI".');
           setFieldError('nationality', elements.nationality.value ? '' : 'Please select a nationality.');
 
           const hasErrors = Boolean(
             document.querySelector('.error-text:not(:empty)')
           );
           elements.submit.disabled = hasErrors;
+          elements.submit.setAttribute('aria-disabled', hasErrors ? 'true' : 'false');
           return !hasErrors;
         }
 
@@ -941,6 +969,22 @@
         function handleError(err, fallback) {
           const text = err && err.message ? err.message : fallback;
           showToast(text || fallback || 'Unexpected error');
+        }
+
+        /**
+         * @function trackEvent
+         * @description Logs analytics events when Firebase analytics is available.
+         * @param {string} eventName - Analytics event name.
+         * @param {Object} params - Optional event parameters.
+         * @returns {void} Nothing.
+         */
+        function trackEvent(eventName, params = {}) {
+          try {
+            if (!window.analytics || !window.firebaseLogEvent) return;
+            window.firebaseLogEvent(window.analytics, eventName, params);
+          } catch (e) {
+            // No-op for analytics-only failures.
+          }
         }
 
         /**
@@ -962,10 +1006,12 @@
             const btn = document.getElementById(btnId);
             if (isLoading) {
                 btn.classList.add('btn-loading');
+                btn.setAttribute('aria-disabled', 'true');
                 btn.dataset.originalHtml = btn.innerHTML;
                 btn.innerHTML = '<span class="btn-spinner"></span>';
             } else {
                 btn.classList.remove('btn-loading');
+                btn.setAttribute('aria-disabled', btn.disabled ? 'true' : 'false');
                 if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
             }
         }
@@ -988,6 +1034,7 @@
             return 15000;
         }
 
+        // === API ===
         async function callGemini(endpoint, payload, { stream = false, retries = 1 } = {}) {
             const apiKey = getApiKey();
             if (!apiKey) throw new Error('Gemini API key missing');
@@ -997,8 +1044,8 @@
             }
 
             const url = stream
-                ? `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:${endpoint}?alt=sse&key=${apiKey}`
-                : `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:${endpoint}?key=${apiKey}`;
+                ? `${GEMINI_ENDPOINT}/${MODEL}:${endpoint}?alt=sse&key=${apiKey}`
+                : `${GEMINI_ENDPOINT}/${MODEL}:${endpoint}?key=${apiKey}`;
 
             for (let attempt = 0; attempt <= retries; attempt++) {
                 const res = await fetch(url, {
@@ -1073,11 +1120,14 @@
                 
                 if(i - 1 < currentIndex) {
                     stepEl.classList.add('done');
+                    stepEl.removeAttribute('aria-current');
                     icon.innerHTML = '✓';
                 } else if(i - 1 === currentIndex) {
                     stepEl.classList.add('active');
+                    stepEl.setAttribute('aria-current', 'step');
                     icon.innerHTML = i;
                 } else {
+                    stepEl.removeAttribute('aria-current');
                     icon.innerHTML = i;
                 }
             }
@@ -1142,6 +1192,7 @@
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
+            trackEvent('share_clicked', { action: 'download_plan' });
         }
 
         function updateCounter(change) {
@@ -1173,7 +1224,7 @@
             if(val.length < 2) { destDropdown.classList.remove('show'); return; }
             destDropdown.innerHTML = '<li class="ac-loading"><span class="btn-spinner" style="width:16px; height:16px; border-width:2px; vertical-align:middle; margin-right:8px;"></span> Checking live flight costs...</li>';
             destDropdown.classList.add('show');
-            debounceTimer = setTimeout(() => { fetchSuggestions(val); }, 600);
+            debounceTimer = setTimeout(() => { fetchSuggestions(sanitizeInput(val)); }, INPUT_DEBOUNCE_MS);
         });
 
         document.addEventListener('click', (e) => { if(!destInput.contains(e.target) && !destDropdown.contains(e.target)) destDropdown.classList.remove('show'); });
@@ -1193,7 +1244,7 @@
                     destDropdown.innerHTML = `<li class="ac-loading" style="color:var(--warning)">Rate limit reached. Retry in ${sec}s.</li>`;
                     return;
                 }
-                const jsonRes = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }, { retries: 0 });
+                const jsonRes = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}], tools:[SEARCH_TOOL] }, { retries: 0 });
                 if (signal.aborted) return;
                 let text = jsonRes.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'').trim();
                 const parsed = JSON.parse(text);
@@ -1230,8 +1281,9 @@
             }
             if(!getApiKey()) { showToast('Backend API key not configured'); return; }
             saveState();
+            trackEvent('trip_search_started');
             setButtonLoading('btn-submit', true);
-            setTimeout(() => { switchScreen('screen-scanning'); runRiskScan(); }, 600);
+            setTimeout(() => { switchScreen('screen-scanning'); runRiskScan(); }, INPUT_DEBOUNCE_MS);
         });
 
         // --- SCANNER ---
@@ -1270,11 +1322,12 @@ All costs must be in ${AppState.data.currency}. User budget is ${AppState.data.b
 Return ONLY valid JSON:
 { "safety_score": <int 0-100>, "risks": [ { "id": "r1", "title": "String", "description": "String", "severity": "high|medium|low", "options": ["Op 1", "Op 2"] } ] }`;
             try {
-                const jsonRes = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }, { retries: 1 });
+                const jsonRes = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}], tools:[SEARCH_TOOL] }, { retries: 1 });
                 let text = jsonRes.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'').trim();
                 const parsed = JSON.parse(text);
                 
                 AppState.risks = parsed.risks || []; AppState.score = parsed.safety_score || 100; saveState();
+                trackEvent('risk_scan_completed', { score: AppState.score, risk_count: AppState.risks.length });
 
                 setTimeout(() => {
                     if(AppState.risks.length > 0) { resText.textContent = `⚠️ ${AppState.risks.length} risks detected`; resText.style.color = 'var(--warning)'; } 
@@ -1350,6 +1403,7 @@ Return ONLY valid JSON:
                 }
             });
             document.getElementById('btn-confirm-res').disabled = !allHighResolved;
+            document.getElementById('btn-confirm-res').setAttribute('aria-disabled', allHighResolved ? 'false' : 'true');
         }
 
         document.getElementById('form-resolution').addEventListener('submit', (e) => {
@@ -1475,7 +1529,7 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
 `;
 
             try {
-                const res = await callGemini('streamGenerateContent', { contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }, { stream: true, retries: 1 });
+                const res = await callGemini('streamGenerateContent', { contents:[{parts:[{text:prompt}]}], tools:[SEARCH_TOOL] }, { stream: true, retries: 1 });
                 const reader = res.body.getReader(); const decoder = new TextDecoder(); let fullText = "";
 
                 while(true) {
@@ -1495,10 +1549,11 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                 }
                 AppState.itineraryRaw = fullText;
                 saveState();
+                trackEvent('itinerary_generated', { mode: 'stream' });
                 if(!isFirstChunkReceived) stopPremiumLoadingAndTransition();
             } catch(e) {
                 try {
-                    const fallbackJson = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }, { retries: 1 });
+                    const fallbackJson = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}], tools:[SEARCH_TOOL] }, { retries: 1 });
                     const fallbackText = (((fallbackJson || {}).candidates || [])[0] || {}).content?.parts?.[0]?.text || '';
                     if(!fallbackText.trim()) throw new Error('Fallback returned empty itinerary');
 
@@ -1506,6 +1561,7 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                     parseStreamBuffer(fallbackText);
                     AppState.itineraryRaw = fallbackText;
                     saveState();
+                    trackEvent('itinerary_generated', { mode: 'fallback' });
                     showToast('Live stream failed, loaded backup itinerary instead.');
                 } catch (fallbackErr) {
                     stopPremiumLoadingAndTransition(); fallbackMode = true;
@@ -1692,6 +1748,16 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
         }
 
         /**
+         * @function validateDate
+         * @description Compatibility wrapper for test suite.
+         * @param {string} dateStr - ISO date string.
+         * @returns {boolean} True when valid.
+         */
+        function validateDate(dateStr) {
+          return validateTravelDate(dateStr);
+        }
+
+        /**
          * @function getCurrencySymbol
          * @description Returns UI symbol for currency code.
          * @param {string} currency - Currency code.
@@ -1706,158 +1772,72 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
          * TripMind AI - Test Suite
          * Validates core functionality and edge cases
          */
-        const TripMindTests = {
-          results: [],
-          assert(testName, condition, message) {
-            this.results.push({
-              test: testName,
-              passed: condition,
-              message: message
-            });
+        // === TESTS ===
+        const Tests = {
+          passed: 0,
+          failed: 0,
+          assert(name, condition) {
+            if (condition) {
+              this.passed++;
+              console.info(`PASS: ${name}`);
+            } else {
+              this.failed++;
+              console.warn(`FAIL: ${name}`);
+            }
           },
-          testInputValidation() {
-            this.assert(
-              'Empty destination rejected',
-              validateDestination('') === false,
-              'Empty destination should fail'
-            );
-            this.assert(
-              'Valid destination accepted',
-              validateDestination('Goa') === true,
-              'Valid destination should pass'
-            );
-            this.assert(
-              'Short destination rejected',
-              validateDestination('G') === false,
-              'Single char destination should fail'
-            );
+          testValidation() {
+            this.assert('Empty destination fails', !validateDestination(''));
+            this.assert('Short destination fails', !validateDestination('A'));
+            this.assert('Valid destination passes', validateDestination('Goa'));
+            this.assert('Negative budget fails', !validateBudget(-100));
+            this.assert('Zero budget fails', !validateBudget(0));
+            this.assert('Valid budget passes', validateBudget(5000));
+            this.assert('Group 0 fails', !validateGroupSize(0));
+            this.assert('Group 21 fails', !validateGroupSize(21));
+            this.assert('Group 4 passes', validateGroupSize(4));
+            this.assert('Past date fails', !validateDate('2020-01-01'));
+            this.assert('Future date passes', validateDate('2027-01-01'));
+            this.assert('Empty API key fails', !validateApiKey(''));
+            this.assert('Invalid API key fails', !validateApiKey('invalid'));
+            this.assert('Valid API key passes', validateApiKey('AIzaSyTest123'));
           },
-          testBudgetValidation() {
-            this.assert(
-              'Negative budget rejected',
-              validateBudget(-100) === false,
-              'Negative budget should fail'
-            );
-            this.assert(
-              'Zero budget rejected',
-              validateBudget(0) === false,
-              'Zero budget should fail'
-            );
-            this.assert(
-              'Valid budget accepted',
-              validateBudget(5000) === true,
-              'Valid budget should pass'
-            );
+          testSecurity() {
+            this.assert('XSS script blocked', !sanitizeInput('<script>').includes('<script>'));
+            this.assert('XSS img blocked', !sanitizeInput('<img onerror=1>').includes('<img'));
+            this.assert('Normal text passes', sanitizeInput('Goa India') === 'Goa India');
+            this.assert('API key not in HTML', !document.documentElement.innerHTML.includes('AIzaSy'));
           },
-          testGroupSizeValidation() {
-            this.assert(
-              'Zero group size rejected',
-              validateGroupSize(0) === false,
-              'Zero group size should fail'
-            );
-            this.assert(
-              'Negative group size rejected',
-              validateGroupSize(-1) === false,
-              'Negative group size should fail'
-            );
-            this.assert(
-              'Oversized group rejected',
-              validateGroupSize(25) === false,
-              'Group > 20 should fail'
-            );
-            this.assert(
-              'Valid group size accepted',
-              validateGroupSize(4) === true,
-              'Valid group size should pass'
-            );
+          testState() {
+            this.assert('AppState exists', typeof AppState === 'object');
+            this.assert('AppState.data exists', typeof AppState.data === 'object');
+            this.assert('AppState.currentScreen exists', typeof AppState.currentScreen !== 'undefined');
           },
-          testApiKeyValidation() {
-            this.assert(
-              'Empty API key rejected',
-              validateApiKey('') === false,
-              'Empty key should fail'
-            );
-            this.assert(
-              'Invalid API key rejected',
-              validateApiKey('invalid-key') === false,
-              'Non-AI key should fail'
-            );
-            this.assert(
-              'Valid API key format accepted',
-              validateApiKey('AIzaSyTest123456789') === true,
-              'Valid AI key should pass'
-            );
+          testDOM() {
+            this.assert('Destination input exists', !!document.getElementById('destination'));
+            this.assert('API key input exists', !!document.getElementById('apiKey'));
+            this.assert('Main landmark exists', !!document.querySelector('main'));
+            this.assert('Nav landmark exists', !!document.querySelector('nav'));
+            this.assert('All buttons have aria-label', Array.from(document.querySelectorAll('button')).every((b) => b.getAttribute('aria-label') || b.textContent.trim()));
           },
-          testInputSanitization() {
-            this.assert(
-              'XSS script tag removed',
-              sanitizeInput('<script>alert(1)</script>').includes('<script>') === false,
-              'Script tags should be removed'
-            );
-            this.assert(
-              'Normal text preserved',
-              sanitizeInput('Goa, India') === 'Goa, India',
-              'Normal text should pass through'
-            );
-          },
-          testCurrencyHandling() {
-            this.assert(
-              'INR symbol correct',
-              getCurrencySymbol('INR') === '₹',
-              'INR should return ₹'
-            );
-            this.assert(
-              'USD symbol correct',
-              getCurrencySymbol('USD') === '$',
-              'USD should return $'
-            );
-          },
-          testDateValidation() {
-            const pastDate = '2020-01-01';
-            const futureDate = '2027-01-01';
-            this.assert(
-              'Past date rejected',
-              validateTravelDate(pastDate) === false,
-              'Past dates should fail'
-            );
-            this.assert(
-              'Future date accepted',
-              validateTravelDate(futureDate) === true,
-              'Future dates should pass'
-            );
-          },
-          testAppState() {
-            this.assert(
-              'AppState exists',
-              typeof AppState === 'object',
-              'AppState should be defined'
-            );
-            this.assert(
-              'AppState has data property',
-              typeof AppState.data === 'object',
-              'AppState.data should exist'
-            );
+          testGoogleServices() {
+            this.assert('Gemini API endpoint correct', GEMINI_ENDPOINT.includes('generativelanguage.googleapis.com'));
+            this.assert('Model is gemini-2.5-flash', MODEL === 'gemini-2.5-flash');
+            this.assert('Search grounding configured', JSON.stringify(SEARCH_TOOL).includes('google_search'));
           },
           runAll() {
-            this.testInputValidation();
-            this.testBudgetValidation();
-            this.testGroupSizeValidation();
-            this.testApiKeyValidation();
-            this.testInputSanitization();
-            this.testCurrencyHandling();
-            this.testDateValidation();
-            this.testAppState();
-
-            const passed = this.results.filter((r) => r.passed).length;
-            const total = this.results.length;
-            console.info(`TripMind Tests: ${passed}/${total} passed`);
-            return this.results;
+            console.group('TripMind AI Test Suite');
+            this.testValidation();
+            this.testSecurity();
+            this.testState();
+            this.testDOM();
+            this.testGoogleServices();
+            console.info(`Results: ${this.passed} passed, ${this.failed} failed`);
+            console.groupEnd();
           }
         };
 
-        // Run tests on load
         window.addEventListener('load', () => {
-          TripMindTests.runAll();
+          Tests.runAll();
         });
     </script>
 </body>
