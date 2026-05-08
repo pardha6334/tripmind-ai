@@ -10,7 +10,7 @@ TripMind AI is an intelligent travel planning and experience engine designed for
 
 ## Exact Google Services Used
 
--   **Gemini 2.0 Flash API:** Powers the core intelligence, risk assessment, and dynamic itinerary generation.
+-   **Gemini 2.5 Flash API:** Powers the core intelligence, risk assessment, and dynamic itinerary generation.
 -   **Google Search Grounding:** Enabled on the Gemini API calls to fetch real-time data for weather, geopolitical conflicts, health alerts, and up-to-date pricing.
 -   **Firebase Hosting:** Project is pre-configured (`firebase.json`, `.firebaserc`) for seamless and lightning-fast deployment.
 -   **Google Fonts:** Utilizes 'Syne' and 'DM Sans' for a premium typographic hierarchy.

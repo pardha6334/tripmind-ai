@@ -580,6 +580,8 @@
         const k1 = "AQ.Ab8RN6LQuB";
         const k2 = "M08mCn0R9AyP7E8WCGM7_L-PkSqNKYBMXEnm4d4g";
         let apiKey = k1 + k2;
+        
+        const MODEL = 'gemini-2.5-flash';
 
         let AppState = { data: {}, risks: [], score: 100, resolutions: {} };
 
@@ -652,7 +654,7 @@ Return ONLY valid JSON (no markdown):
   ]
 }`;
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] })
@@ -798,7 +800,7 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
 `;
 
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`, {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] })
