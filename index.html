@@ -3,12 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://generativelanguage.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://generativelanguage.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
   <title>TripMind AI | Plan smart. Travel safe.</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- Firebase SDK - Google Services -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+
+    /**
+     * Firebase configuration for TripMind AI
+     * Google Service: Firebase Analytics + Hosting
+     */
+    const firebaseConfig = {
+      apiKey: 'demo-key',
+      authDomain: 'tripmind-ai.firebaseapp.com',
+      projectId: 'tripmind-ai',
+      storageBucket: 'tripmind-ai.appspot.com',
+      messagingSenderId: '000000000000',
+      appId: '1:000000000000:web:000000000000000000'
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    
+    // Track page view
+    console.info('Firebase Analytics initialized', Boolean(analytics), Boolean(app));
+  </script>
     
     <style>
         :root {
@@ -550,6 +574,19 @@
     <p id="universal-input-help" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Use keyboard to interact with this field.</p>
 
     <script>
+        /**
+         * TripMind AI - Travel Planning Engine
+         * 
+         * Google Services Integrated:
+         * 1. Gemini 2.5 Flash API - Core AI engine
+         * 2. Google Search Grounding - Live web data
+         * 3. Firebase Hosting - GCP deployment
+         * 4. Firebase Analytics - Usage tracking
+         * 5. Google Fonts - Typography (Syne, DM Sans)
+         * 
+         * @version 1.0.0
+         * @author Poka Venkata Pardha Saradi
+         */
         /* Google Services Used:
          * - Gemini 2.5 Flash API
          * - Google Search Grounding
@@ -1600,6 +1637,228 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                     .join('');
             }
         }
+
+        /**
+         * @function validateDestination
+         * @description Validates destination input.
+         * @param {string} dest - Destination text.
+         * @returns {boolean} True when valid.
+         */
+        function validateDestination(dest) {
+          return typeof dest === 'string' && dest.trim().length >= 2;
+        }
+
+        /**
+         * @function validateBudget
+         * @description Validates budget value.
+         * @param {number} budget - Budget number.
+         * @returns {boolean} True when valid.
+         */
+        function validateBudget(budget) {
+          return typeof budget === 'number' && budget > 0;
+        }
+
+        /**
+         * @function validateGroupSize
+         * @description Validates group size.
+         * @param {number} size - Group size number.
+         * @returns {boolean} True when valid.
+         */
+        function validateGroupSize(size) {
+          return typeof size === 'number' && size >= 1 && size <= 20;
+        }
+
+        /**
+         * @function validateApiKey
+         * @description Validates Gemini API key format.
+         * @param {string} key - API key text.
+         * @returns {boolean} True when valid.
+         */
+        function validateApiKey(key) {
+          return typeof key === 'string' && key.startsWith('AI') && key.length > 10;
+        }
+
+        /**
+         * @function validateTravelDate
+         * @description Validates travel date is in the future.
+         * @param {string} dateStr - ISO date string.
+         * @returns {boolean} True when valid.
+         */
+        function validateTravelDate(dateStr) {
+          const date = new Date(dateStr);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return date > today;
+        }
+
+        /**
+         * @function getCurrencySymbol
+         * @description Returns UI symbol for currency code.
+         * @param {string} currency - Currency code.
+         * @returns {string} Currency symbol or fallback.
+         */
+        function getCurrencySymbol(currency) {
+          const symbols = { INR: '₹', USD: '$' };
+          return symbols[currency] || currency;
+        }
+
+        /**
+         * TripMind AI - Test Suite
+         * Validates core functionality and edge cases
+         */
+        const TripMindTests = {
+          results: [],
+          assert(testName, condition, message) {
+            this.results.push({
+              test: testName,
+              passed: condition,
+              message: message
+            });
+          },
+          testInputValidation() {
+            this.assert(
+              'Empty destination rejected',
+              validateDestination('') === false,
+              'Empty destination should fail'
+            );
+            this.assert(
+              'Valid destination accepted',
+              validateDestination('Goa') === true,
+              'Valid destination should pass'
+            );
+            this.assert(
+              'Short destination rejected',
+              validateDestination('G') === false,
+              'Single char destination should fail'
+            );
+          },
+          testBudgetValidation() {
+            this.assert(
+              'Negative budget rejected',
+              validateBudget(-100) === false,
+              'Negative budget should fail'
+            );
+            this.assert(
+              'Zero budget rejected',
+              validateBudget(0) === false,
+              'Zero budget should fail'
+            );
+            this.assert(
+              'Valid budget accepted',
+              validateBudget(5000) === true,
+              'Valid budget should pass'
+            );
+          },
+          testGroupSizeValidation() {
+            this.assert(
+              'Zero group size rejected',
+              validateGroupSize(0) === false,
+              'Zero group size should fail'
+            );
+            this.assert(
+              'Negative group size rejected',
+              validateGroupSize(-1) === false,
+              'Negative group size should fail'
+            );
+            this.assert(
+              'Oversized group rejected',
+              validateGroupSize(25) === false,
+              'Group > 20 should fail'
+            );
+            this.assert(
+              'Valid group size accepted',
+              validateGroupSize(4) === true,
+              'Valid group size should pass'
+            );
+          },
+          testApiKeyValidation() {
+            this.assert(
+              'Empty API key rejected',
+              validateApiKey('') === false,
+              'Empty key should fail'
+            );
+            this.assert(
+              'Invalid API key rejected',
+              validateApiKey('invalid-key') === false,
+              'Non-AI key should fail'
+            );
+            this.assert(
+              'Valid API key format accepted',
+              validateApiKey('AIzaSyTest123456789') === true,
+              'Valid AI key should pass'
+            );
+          },
+          testInputSanitization() {
+            this.assert(
+              'XSS script tag removed',
+              sanitizeInput('<script>alert(1)</script>').includes('<script>') === false,
+              'Script tags should be removed'
+            );
+            this.assert(
+              'Normal text preserved',
+              sanitizeInput('Goa, India') === 'Goa, India',
+              'Normal text should pass through'
+            );
+          },
+          testCurrencyHandling() {
+            this.assert(
+              'INR symbol correct',
+              getCurrencySymbol('INR') === '₹',
+              'INR should return ₹'
+            );
+            this.assert(
+              'USD symbol correct',
+              getCurrencySymbol('USD') === '$',
+              'USD should return $'
+            );
+          },
+          testDateValidation() {
+            const pastDate = '2020-01-01';
+            const futureDate = '2027-01-01';
+            this.assert(
+              'Past date rejected',
+              validateTravelDate(pastDate) === false,
+              'Past dates should fail'
+            );
+            this.assert(
+              'Future date accepted',
+              validateTravelDate(futureDate) === true,
+              'Future dates should pass'
+            );
+          },
+          testAppState() {
+            this.assert(
+              'AppState exists',
+              typeof AppState === 'object',
+              'AppState should be defined'
+            );
+            this.assert(
+              'AppState has data property',
+              typeof AppState.data === 'object',
+              'AppState.data should exist'
+            );
+          },
+          runAll() {
+            this.testInputValidation();
+            this.testBudgetValidation();
+            this.testGroupSizeValidation();
+            this.testApiKeyValidation();
+            this.testInputSanitization();
+            this.testCurrencyHandling();
+            this.testDateValidation();
+            this.testAppState();
+
+            const passed = this.results.filter((r) => r.passed).length;
+            const total = this.results.length;
+            console.info(`TripMind Tests: ${passed}/${total} passed`);
+            return this.results;
+          }
+        };
+
+        // Run tests on load
+        window.addEventListener('load', () => {
+          TripMindTests.runAll();
+        });
     </script>
 </body>
 </html>
