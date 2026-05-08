@@ -72,8 +72,8 @@
 
         /* Nav & Stepper */
         .nav-header {
-            position: sticky; top: 0; z-index: 100;
-            background: rgba(5,5,8,0.8); backdrop-filter: blur(15px);
+            position: sticky; top: 0; z-index: 1000;
+            background: rgba(7,7,9,0.95); backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
             padding: 1rem 2rem;
             display: flex; align-items: center; justify-content: space-between;
@@ -111,7 +111,7 @@
         .step.done + .step-divider { background: var(--primary); }
 
         /* Screens & Transitions */
-        .screen { display: none; opacity: 0; flex: 1; width: 100%; padding: 2rem; max-width: 1000px; margin: 0 auto; }
+        .screen { display: none; opacity: 0; flex: 1; width: 100%; padding: 2rem; padding-top: 80px; max-width: 1000px; margin: 0 auto; }
         .screen.active { display: flex; flex-direction: column; animation: fadeIn 0.2s ease forwards; }
         .screen.fading-out { animation: fadeOut 0.2s ease forwards; }
         
@@ -123,12 +123,28 @@
         .form-label { color: var(--text-main); font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; display: block; }
         .helper-text { color: var(--text-muted); font-size: 0.85rem; font-style: italic; margin-top: 0.3rem; }
         
-        input[type="text"], textarea, select {
+        input[type="text"], textarea {
             width: 100%; padding: 1.2rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
             color: var(--text-main); border-radius: var(--radius-md); font-family: var(--font-body);
             font-size: 1.1rem; transition: var(--transition); appearance: none;
         }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1); }
+        input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1); }
+
+        select {
+            background-color: #12121a !important;
+            color: #e8e8f2 !important;
+            border: 1px solid #1f1f2e !important;
+            padding: 10px 14px !important;
+            border-radius: 8px !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300ff88' d='M6 8L1 3h10z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 12px center !important;
+            cursor: pointer !important;
+        }
+        select option { background-color: #12121a !important; color: #e8e8f2 !important; padding: 8px !important; }
+        select:focus { outline: none !important; border-color: #00ff88 !important; box-shadow: 0 0 0 2px rgba(0,255,136,0.2) !important; }
 
         /* Buttons */
         .btn-primary {
@@ -223,12 +239,36 @@
         }
 
         /* Loading Screen specific */
-        .globe-container { width: 250px; height: 250px; margin: 0 auto 3rem; position: relative; }
-        .globe-svg { width: 100%; height: 100%; animation: spin 20s linear infinite; }
-        .airplane-orbit { position: absolute; top: 0; left: 0; width: 100%; height: 100%; animation: spin 3s linear infinite; }
-        .airplane-svg { position: absolute; top: -10px; left: 50%; transform: translateX(-50%) rotate(90deg); width: 30px; height: 30px; }
-        .stats-block { display: flex; flex-direction: column; gap: 1rem; text-align: left; margin: 0 auto 3rem; width: 300px; }
-        .prog-container { width: 100%; max-width: 500px; height: 12px; background: rgba(255,255,255,0.1); border-radius: var(--radius-pill); margin: 0 auto 1.5rem; overflow: hidden; }
+        .card-stack-container { position: relative; width: 250px; height: 350px; margin: 0 auto 3rem; perspective: 1000px; }
+        .stack-card { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(77,143,255,0.2));
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: var(--radius-lg); display: flex; justify-content: center; align-items: center;
+            font-size: 2.5rem; font-family: var(--font-heading); font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .stack-card::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(to bottom right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg); animation: shimmer 3s infinite linear;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%) rotate(30deg); } 100% { transform: translateX(100%) rotate(30deg); } }
+        
+        .stack-card[data-index="0"] { transform: translateZ(0) rotate(-10deg) translateX(-40px) scale(0.9); z-index: 1; opacity: 0.6; }
+        .stack-card[data-index="1"] { transform: translateZ(20px) rotate(0deg) translateX(0) scale(1); z-index: 3; opacity: 1; box-shadow: 0 20px 50px rgba(0,255,136,0.1); }
+        .stack-card[data-index="2"] { transform: translateZ(0) rotate(10deg) translateX(40px) scale(0.9); z-index: 2; opacity: 0.6; }
+
+        .typewriter-container { font-family: 'Courier New', Courier, monospace; font-size: 1.2rem; color: var(--primary); height: 2rem; margin-bottom: 2rem; }
+        .typewriter-text { border-right: 2px solid var(--primary); padding-right: 5px; animation: blink 0.7s step-end infinite; }
+        @keyframes blink { 50% { border-color: transparent; } }
+
+        .particles-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .particle { position: absolute; bottom: -20px; font-size: 1.5rem; animation: floatUp 4s linear forwards; opacity: 0; }
+        @keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; } }
+
+        .prog-container { width: 100%; max-width: 500px; height: 12px; background: rgba(255,255,255,0.1); border-radius: var(--radius-pill); margin: 0 auto 1.5rem; overflow: hidden; position:relative; z-index:10;}
         .prog-bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--primary)); border-radius: var(--radius-pill); box-shadow: 0 0 15px var(--primary-glow); }
         .prog-bar.animate { animation: fillProgress 8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         @keyframes fillProgress { 0% { width: 0%; } 100% { width: 90%; } }
@@ -407,32 +447,20 @@
     </main>
 
     <!-- SCREEN LOADING: PREMIUM ANIMATED VIEW -->
-    <main id="screen-loading" class="screen" style="text-align:center; justify-content:center;">
-        <div class="globe-container">
-            <svg class="globe-svg" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="48" fill="rgba(255,255,255,0.05)" stroke="var(--border)" stroke-width="1"/>
-                <path d="M50 2 A48 48 0 0 0 50 98 A48 48 0 0 0 50 2" fill="none" stroke="var(--border)" stroke-width="1"/>
-                <path d="M2 50 A48 48 0 0 0 98 50 A48 48 0 0 0 2 50" fill="none" stroke="var(--border)" stroke-width="1"/>
-                <path d="M15 15 Q50 50 85 85" fill="none" stroke="rgba(0,255,136,0.3)" stroke-width="1"/>
-                <path d="M15 85 Q50 50 85 15" fill="none" stroke="rgba(0,255,136,0.3)" stroke-width="1"/>
-            </svg>
-            <div class="airplane-orbit">
-                <svg class="airplane-svg" viewBox="0 0 24 24" fill="var(--primary)">
-                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-                </svg>
-            </div>
+    <main id="screen-loading" class="screen" style="text-align:center; justify-content:center; position:relative; overflow:hidden;">
+        <div class="particles-container" id="particles-box"></div>
+        
+        <div class="card-stack-container" id="card-stack">
+            <div class="stack-card" data-index="0">🏖️ Goa</div>
+            <div class="stack-card" data-index="1">🗼 Paris</div>
+            <div class="stack-card" data-index="2">🏔️ Shimla</div>
         </div>
 
-        <div class="stats-block">
-            <div style="font-size:1.2rem; color:var(--text-muted); display:flex; gap:1rem;"><span>🔍 Searching hotels...</span> <span id="stat-hotels" style="color:#fff; font-family:var(--font-heading); font-weight:700; min-width:60px; text-align:right;">0</span></div>
-            <div style="font-size:1.2rem; color:var(--text-muted); display:flex; gap:1rem;"><span>📍 Mapping attractions...</span> <span id="stat-attr" style="color:#fff; font-family:var(--font-heading); font-weight:700; min-width:60px; text-align:right;">0</span></div>
-            <div style="font-size:1.2rem; color:var(--text-muted); display:flex; gap:1rem;"><span>⚡ Analyzing risks...</span> <span id="stat-risks" style="color:#fff; font-family:var(--font-heading); font-weight:700; min-width:60px; text-align:right;">0</span></div>
-            <div style="font-size:1.2rem; color:var(--text-muted); display:flex; gap:1rem;"><span>🌤️ Checking live weather...</span> <span id="stat-weather" style="color:#fff; font-family:var(--font-heading); font-weight:700; min-width:60px; text-align:right;">0</span></div>
+        <div class="typewriter-container">
+            <span class="typewriter-text" id="tw-text"></span>
         </div>
 
         <div class="prog-container"><div class="prog-bar" id="load-prog-bar"></div></div>
-        <div id="load-tip" style="font-size:1.1rem; color:var(--accent); font-style:italic; min-height:2rem; transition:opacity 0.5s;">💡 We check 50+ live data sources</div>
-        <div id="load-extra-msg" style="margin-top:1rem; color:var(--warning); font-size:0.9rem; min-height:1.5rem;"></div>
     </main>
 
     <!-- SCREEN 4: ITINERARY -->
@@ -843,18 +871,55 @@ Return ONLY valid JSON:
         function startPremiumLoading() {
             switchScreen('screen-loading');
             const pBar = document.getElementById('load-prog-bar'); pBar.classList.remove('animate'); void pBar.offsetWidth; pBar.classList.add('animate');
-            document.getElementById('load-extra-msg').textContent = "";
-            let vals = { hotels: 0, attr: 0, risks: 0, weather: 0 };
-            const countInt = setInterval(() => {
-                vals.hotels += Math.floor(Math.random() * 47); vals.attr += Math.floor(Math.random() * 5); vals.risks += Math.floor(Math.random() * 2); vals.weather += Math.floor(Math.random() * 3);
-                document.getElementById('stat-hotels').textContent = vals.hotels.toLocaleString(); document.getElementById('stat-attr').textContent = vals.attr.toLocaleString(); document.getElementById('stat-risks').textContent = vals.risks.toLocaleString(); document.getElementById('stat-weather').textContent = vals.weather.toLocaleString();
-            }, 500);
-            const tips = ["💡 We check 50+ live data sources", "💡 Real-time travel advisories included", "💡 Personalized just for you", "💡 Powered by Gemini 2.5 + Google Search"];
-            let tipIdx = 0; const tipEl = document.getElementById('load-tip');
-            const tipInt = setInterval(() => { tipEl.style.opacity = 0; setTimeout(() => { tipIdx = (tipIdx + 1) % tips.length; tipEl.textContent = tips[tipIdx]; tipEl.style.opacity = 1; }, 500); }, 3000);
-            const t90 = setTimeout(() => { document.getElementById('load-extra-msg').textContent = "Almost there... Gemini is thinking deeply ✨"; }, 7200);
-            const t30 = setTimeout(() => { document.getElementById('load-extra-msg').textContent = "This is taking longer than usual... Gemini is doing deep research for you 🔍"; }, 30000);
-            loadingIntervals.push(countInt, tipInt); loadingTimers.push(t90, t30);
+            
+            // 1. Card Stack Rotation
+            const cards = Array.from(document.querySelectorAll('.stack-card'));
+            let positions = [0, 1, 2];
+            const cardStackInt = setInterval(() => {
+                positions.unshift(positions.pop());
+                cards.forEach((card, i) => { card.setAttribute('data-index', positions[i]); });
+            }, 1500);
+
+            // 2. Typewriter Effect
+            const twText = document.getElementById('tw-text');
+            const dest = AppState.data.destination || 'your destination';
+            const phrases = [
+                `Searching best hotels in ${dest}...`,
+                "Checking visa requirements...",
+                "Scanning weather forecasts...",
+                "Finding hidden gems..."
+            ];
+            let pIdx = 0; let cIdx = 0; let isDeleting = false; let isPaused = false;
+            
+            const twInt = setInterval(() => {
+                if(isPaused) return;
+                const currentPhrase = phrases[pIdx];
+                if(isDeleting) {
+                    twText.textContent = currentPhrase.substring(0, cIdx - 1); cIdx--;
+                    if(cIdx === 0) { isDeleting = false; pIdx = (pIdx + 1) % phrases.length; }
+                } else {
+                    twText.textContent = currentPhrase.substring(0, cIdx + 1); cIdx++;
+                    if(cIdx === currentPhrase.length) { 
+                        isPaused = true; 
+                        setTimeout(() => { isPaused = false; isDeleting = true; }, 1000); 
+                    }
+                }
+            }, 60);
+
+            // 3. Particle Spawner
+            const pBox = document.getElementById('particles-box');
+            pBox.innerHTML = '';
+            const emojis = ['✈️', '🏨', '🗺️', '🌤️', '💰', '🎒'];
+            const partInt = setInterval(() => {
+                const p = document.createElement('div'); p.className = 'particle';
+                p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                p.style.left = Math.random() * 90 + '%';
+                p.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                pBox.appendChild(p);
+                setTimeout(() => { if(p.parentNode) p.remove() }, 5000);
+            }, 300);
+
+            loadingIntervals.push(cardStackInt, twInt, partInt);
         }
 
         function stopPremiumLoadingAndTransition() {
