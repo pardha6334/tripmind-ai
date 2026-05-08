@@ -184,6 +184,29 @@
             animation: spin 1s ease-in-out infinite;
         }
 
+        /* Autocomplete */
+        .autocomplete-wrapper { position: relative; width: 100%; z-index: 50;}
+        .autocomplete-dropdown {
+            position: absolute; top: 100%; left: 0; right: 0; margin-top: 0.5rem;
+            background: rgba(16, 16, 22, 0.95); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: var(--radius-md);
+            max-height: 300px; overflow-y: auto; display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); list-style: none; padding: 0.5rem;
+        }
+        .autocomplete-dropdown.show { display: block; animation: fadeSlideUp 0.3s ease forwards; }
+        .autocomplete-item {
+            padding: 1rem; cursor: pointer; border-radius: var(--radius-sm);
+            display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+            transition: var(--transition); border: 1px solid transparent; margin-bottom: 0.2rem;
+        }
+        .autocomplete-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+        .ac-name { font-weight: 700; flex: 1; font-size: 1.1rem;}
+        .ac-badges { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; justify-content: flex-end;}
+        .ac-badge { padding: 0.3rem 0.6rem; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 700; white-space: nowrap;}
+        .ac-cost { background: rgba(77, 143, 255, 0.1); color: var(--accent); border: 1px solid rgba(77, 143, 255, 0.2); }
+        .ac-safe { color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+        .ac-loading { padding: 1rem; text-align: center; color: var(--text-muted); font-style: italic; }
+
         /* --- SCREEN 1: HERO & INPUT --- */
         #screen-setup {
             position: relative;
@@ -512,7 +535,11 @@
             
             <form id="form-setup">
                 <div class="form-card">
-                    <input type="text" id="destination" name="destination" placeholder="Where do you want to go?" required style="font-size: 1.5rem; padding: 1.5rem;">
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="destination" name="destination" placeholder="Where do you want to go?" required style="font-size: 1.5rem; padding: 1.5rem; width: 100%;" autocomplete="off">
+                        <ul id="dest-suggestions" class="autocomplete-dropdown"></ul>
+                    </div>
+                    <div id="origin-hint" style="color: var(--primary); font-size: 0.85rem; font-style: italic; margin-top: -1rem; margin-bottom: 0.5rem; padding-left: 0.5rem;">Flight costs estimated from New Delhi</div>
                     
                     <div>
                         <label style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Nationality (Passport)</label>
@@ -750,6 +777,91 @@
                 if (btn.dataset.originalHtml) {
                     btn.innerHTML = btn.dataset.originalHtml;
                 }
+            }
+        }
+
+        // --- AUTOCOMPLETE LOGIC ---
+        const capitals = {
+            'India': 'New Delhi', 'USA': 'New York', 'UK': 'London', 'Canada': 'Toronto',
+            'Australia': 'Sydney', 'Germany': 'Berlin', 'France': 'Paris', 'Japan': 'Tokyo',
+            'Singapore': 'Singapore City', 'UAE': 'Dubai', 'Other': 'your capital city'
+        };
+
+        const destInput = document.getElementById('destination');
+        const destDropdown = document.getElementById('dest-suggestions');
+        const natSelect = document.getElementById('nationality');
+        const originHint = document.getElementById('origin-hint');
+        let debounceTimer;
+        let acController;
+
+        natSelect.addEventListener('change', () => {
+            originHint.textContent = `Flight costs estimated from ${capitals[natSelect.value] || 'your capital city'}`;
+        });
+
+        destInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const val = destInput.value.trim();
+            if(val.length < 2) { destDropdown.classList.remove('show'); return; }
+            
+            destDropdown.innerHTML = '<li class="ac-loading"><span class="btn-spinner" style="width:16px; height:16px; border-width:2px; vertical-align:middle; margin-right:8px;"></span> Checking live flight costs...</li>';
+            destDropdown.classList.add('show');
+            
+            debounceTimer = setTimeout(() => { fetchSuggestions(val); }, 600);
+        });
+
+        document.addEventListener('click', (e) => {
+            if(!destInput.contains(e.target) && !destDropdown.contains(e.target)) destDropdown.classList.remove('show');
+        });
+
+        async function fetchSuggestions(query) {
+            if(acController) acController.abort();
+            acController = new AbortController();
+            const signal = acController.signal;
+
+            const nat = natSelect.value;
+            const cap = capitals[nat] || 'your capital city';
+            const cur = document.querySelector('input[name="currency"]:checked').value;
+
+            const prompt = `User is flying from ${cap} (${nat}). They typed "${query}" for destination.
+Suggest up to 5 best matching travel destinations.
+Return ONLY a valid JSON array of objects, with no markdown formatting.
+Schema:
+[{"name": "String", "cost": "String (e.g. 3,500-8,000)", "score": Integer (0-100)}]
+Estimate round trip flight costs strictly in ${cur} symbol. Cost field should just be the number range without currency symbol.`;
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ contents:[{parts:[{text:prompt}]}] }),
+                    signal
+                });
+                if(!res.ok) throw new Error("API Error");
+                const jsonRes = await res.json();
+                let text = jsonRes.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'').trim();
+                const parsed = JSON.parse(text);
+
+                if(!parsed || parsed.length === 0) { destDropdown.classList.remove('show'); return; }
+
+                destDropdown.innerHTML = '';
+                parsed.forEach(item => {
+                    let bg = item.score >= 80 ? 'rgba(0,255,136,0.2)' : item.score >= 50 ? 'rgba(255,217,61,0.2)' : 'rgba(255,71,87,0.2)';
+                    let dot = item.score >= 80 ? '🟢' : item.score >= 50 ? '🟡' : '🔴';
+
+                    const li = document.createElement('li');
+                    li.className = 'autocomplete-item';
+                    li.innerHTML = `
+                        <div class="ac-name">${item.name}</div>
+                        <div class="ac-badges">
+                            <span class="ac-badge ac-cost">✈️ ${cur}${item.cost}</span>
+                            <span class="ac-badge ac-safe" style="background:${bg};">Safety: ${item.score} ${dot}</span>
+                        </div>
+                    `;
+                    li.onclick = () => { destInput.value = item.name; destDropdown.classList.remove('show'); destInput.focus(); };
+                    destDropdown.appendChild(li);
+                });
+            } catch (err) {
+                if(err.name !== 'AbortError') destDropdown.innerHTML = '<li class="ac-loading" style="color:var(--danger)">Failed to fetch suggestions</li>';
             }
         }
 
