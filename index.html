@@ -236,6 +236,10 @@
             .step span { display: none; }
             .step-divider { width: 15px; }
             .nav-header { padding: 1rem; }
+            .itin-header { align-items: flex-start; }
+            .itin-meta { justify-content: flex-start; width: 100%; }
+            .itin-actions { width: 100%; }
+            .itin-action-btn { min-width: 0; }
         }
 
         /* Loading Screen specific */
@@ -274,7 +278,28 @@
         @keyframes fillProgress { 0% { width: 0%; } 100% { width: 90%; } }
 
         /* Itinerary specific */
-        .itin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .itin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap; }
+        .itin-meta { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+        .itin-actions { display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; }
+        .itin-action-btn {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            color: var(--text-main);
+            border-radius: var(--radius-pill);
+            padding: 0.55rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: var(--transition);
+            min-width: 130px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .itin-action-btn:hover { border-color: var(--accent); background: rgba(77,143,255,0.12); transform: translateY(-1px); }
+        .itin-action-btn:active { transform: scale(0.98); }
+        .itin-action-btn.primary { border-color: rgba(0,255,136,0.35); background: rgba(0,255,136,0.08); }
+        .itin-action-btn.primary:hover { border-color: var(--primary); background: rgba(0,255,136,0.15); }
         .day-tabs { display: flex; overflow-x: auto; gap: 1rem; padding-bottom: 1rem; scrollbar-width: none; }
         .day-tabs::-webkit-scrollbar { display: none; }
         .day-tab { padding: 0.8rem 2rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: var(--radius-pill); cursor: pointer; white-space: nowrap; font-weight: 700; transition: var(--transition); }
@@ -283,8 +308,8 @@
         .day-content.active { display: block; }
         
         /* Toast */
-        .toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-100px); padding: 1rem 2rem; border-radius: var(--radius-pill); font-weight: 700; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1000; }
-        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-100px); opacity: 0; pointer-events: none; padding: 1rem 2rem; border-radius: var(--radius-pill); font-weight: 700; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1000; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .toast-error { background: var(--danger); color: white; }
     </style>
 </head>
@@ -467,9 +492,13 @@
     <main id="screen-itinerary" class="screen">
         <div class="itin-header">
             <h2 id="itin-trip-name" style="margin:0; font-size:1.8rem;">Planning your trip...</h2>
-            <div style="display:flex; gap:1rem; align-items:center;">
+            <div class="itin-meta">
                 <div id="itin-score" style="padding:0.4rem 0.8rem; background:rgba(255,255,255,0.05); border-radius:var(--radius-pill); font-weight:700;">Score: --</div>
                 <div id="itin-cost" style="padding:0.4rem 0.8rem; background:rgba(77,143,255,0.1); color:var(--accent); border-radius:var(--radius-pill); font-weight:700;">Est: --</div>
+                <div class="itin-actions">
+                    <button type="button" id="btn-download-itinerary" class="itin-action-btn primary">⬇️ Download Plan</button>
+                    <button type="button" id="btn-another-plan" class="itin-action-btn">🔁 Another Plan</button>
+                </div>
             </div>
         </div>
         
@@ -498,9 +527,7 @@
 
     <script>
         // --- CONSTANTS & INITIALIZATION ---
-        const k1 = "AQ.Ab8RN6LQuB";
-        const k2 = "M08mCn0R9AyP7E8WCGM7_L-PkSqNKYBMXEnm4d4g";
-        let apiKey = k1 + k2;
+        let apiKey = "AIzaSyAKQ79Sp_RPjW2TuaxVnXzDNs6VG5u4DFg";
         const MODEL = 'gemini-2.5-flash';
         const SESSION_KEY = "tripmind_state";
 
@@ -509,8 +536,11 @@
             data: {},
             risks: [],
             score: 100,
-            resolutions: {}
+            resolutions: {},
+            itineraryRaw: ''
         };
+        let quotaCooldownUntil = 0;
+        let quotaToastUntil = 0;
 
         const flags = {
             '🇮🇳 India': '🇮🇳', '🇺🇸 USA': '🇺🇸', '🇬🇧 UK': '🇬🇧', '🇨🇦 Canada': '🇨🇦', '🇦🇺 Australia': '🇦🇺',
@@ -521,6 +551,11 @@
             '🇨🇦 Canada': 'Ottawa', '🇦🇺 Australia': 'Canberra', '🇩🇪 Germany': 'Berlin', 
             '🇫🇷 France': 'Paris', '🇯🇵 Japan': 'Tokyo', '🇸🇬 Singapore': 'Singapore', 
             '🇦🇪 UAE': 'Abu Dhabi', '🌍 Other': 'your capital city'
+        };
+        const nationalityAliases = {
+            'IN India': '🇮🇳 India', 'US USA': '🇺🇸 USA', 'UK UK': '🇬🇧 UK', 'CA Canada': '🇨🇦 Canada',
+            'AU Australia': '🇦🇺 Australia', 'DE Germany': '🇩🇪 Germany', 'FR France': '🇫🇷 France',
+            'JP Japan': '🇯🇵 Japan', 'SG Singapore': '🇸🇬 Singapore', 'AE UAE': '🇦🇪 UAE', 'Other': '🌍 Other'
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -542,6 +577,9 @@
                 try {
                     const parsed = JSON.parse(saved);
                     AppState = { ...AppState, ...parsed };
+                    if (AppState.data && AppState.data.nationality && nationalityAliases[AppState.data.nationality]) {
+                        AppState.data.nationality = nationalityAliases[AppState.data.nationality];
+                    }
                     
                     // Restore form values
                     const form = document.getElementById('form-setup');
@@ -569,6 +607,20 @@
                     document.getElementById('origin-hint').textContent = `Flight costs estimated from ${capitals[natSelect.value] || 'your capital city'}. We scan live safety alerts for this location.`;
                     
                 } catch(e) {}
+            }
+            if (AppState.currentScreen === 'screen-loading') {
+                AppState.currentScreen = 'screen-setup';
+            }
+            if (AppState.currentScreen === 'screen-itinerary') {
+                if (AppState.itineraryRaw && AppState.itineraryRaw.includes('##')) {
+                    switchScreen('screen-itinerary', true);
+                    parsedSections.clear();
+                    parseStreamBuffer(AppState.itineraryRaw);
+                } else {
+                    AppState.currentScreen = 'screen-setup';
+                    switchScreen('screen-setup', true);
+                }
+                return;
             }
             switchScreen(AppState.currentScreen, true);
         }
@@ -600,6 +652,70 @@
             }
         }
 
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function parseRetryDelayMs(message, details) {
+            const detailRetry = (details || []).find(d => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo' && d.retryDelay);
+            if (detailRetry && detailRetry.retryDelay) {
+                const sec = parseFloat(String(detailRetry.retryDelay).replace('s', ''));
+                if (!Number.isNaN(sec) && sec > 0) return Math.ceil(sec * 1000);
+            }
+            const msgMatch = String(message || '').match(/retry in\s+([\d.]+)s/i);
+            if (msgMatch) {
+                const sec = parseFloat(msgMatch[1]);
+                if (!Number.isNaN(sec) && sec > 0) return Math.ceil(sec * 1000);
+            }
+            return 15000;
+        }
+
+        async function callGemini(endpoint, payload, { stream = false, retries = 1 } = {}) {
+            if (!apiKey) throw new Error('Gemini API key missing');
+            if (Date.now() < quotaCooldownUntil) {
+                const waitSec = Math.ceil((quotaCooldownUntil - Date.now()) / 1000);
+                throw new Error(`Gemini quota cooling down. Try again in ${waitSec}s.`);
+            }
+
+            const url = stream
+                ? `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:${endpoint}?alt=sse&key=${apiKey}`
+                : `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:${endpoint}?key=${apiKey}`;
+
+            for (let attempt = 0; attempt <= retries; attempt++) {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    return stream ? res : await res.json();
+                }
+
+                let errJson = null;
+                let errText = '';
+                try {
+                    errText = await res.text();
+                    errJson = JSON.parse(errText);
+                } catch (e) {}
+
+                const errMessage = (errJson && errJson.error && errJson.error.message) ? errJson.error.message : (errText || 'Unknown error');
+                const retryMs = parseRetryDelayMs(errMessage, errJson && errJson.error ? errJson.error.details : []);
+
+                if (res.status === 429) {
+                    quotaCooldownUntil = Date.now() + retryMs;
+                    if (attempt < retries) {
+                        await sleep(retryMs);
+                        continue;
+                    }
+                    throw new Error(`Quota exceeded. ${errMessage}`);
+                }
+
+                throw new Error(`Gemini API failed (${res.status}): ${errMessage}`);
+            }
+            throw new Error('Gemini API request failed');
+        }
+
         function switchScreen(id, isLoad=false) {
             const current = document.querySelector('.screen.active');
             if(current && current.id !== id && !isLoad) {
@@ -625,10 +741,6 @@
             if(id === 'screen-setup') backBtn.classList.add('hidden');
             else backBtn.classList.remove('hidden');
 
-            if(id === 'screen-itinerary' && !document.getElementById('visa-section-container').innerHTML) {
-                // If loaded into itinerary but no content, fallback to setup
-                if(!isFirstChunkReceived && !fallbackMode) switchScreen('screen-setup');
-            }
         }
 
         function updateStepper(screenId) {
@@ -673,6 +785,46 @@
             }
         }
 
+        function cleanAiText(line) {
+            return String(line || '')
+                .replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/__(.*?)__/g, '$1')
+                .replace(/`([^`]+)`/g, '$1')
+                .replace(/^[-*]\s+/g, '')
+                .replace(/^\d+\.\s+/g, '')
+                .trim();
+        }
+
+        function clearAndStartAnotherPlan() {
+            try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+            AppState.currentScreen = 'screen-setup';
+            AppState.risks = [];
+            AppState.score = 100;
+            AppState.resolutions = {};
+            AppState.itineraryRaw = '';
+            document.getElementById('screen-itinerary').querySelectorAll('#visa-section-container, #cost-section, #day-tabs-container, #days-content-container, #packing-grid, #tips-grid').forEach(el => el.innerHTML = '');
+            const emergencySection = document.getElementById('emergency-section');
+            if (emergencySection) emergencySection.remove();
+            switchScreen('screen-setup');
+        }
+
+        function downloadItineraryPlan() {
+            const tripName = document.getElementById('itin-trip-name').textContent || 'TripMind Itinerary';
+            const score = document.getElementById('itin-score').textContent || '';
+            const cost = document.getElementById('itin-cost').textContent || '';
+            const itineraryText = document.getElementById('screen-itinerary').innerText;
+            const content = `${tripName}\n${score} | ${cost}\n\n${itineraryText}`;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${tripName.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'tripmind_itinerary'}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
         function updateCounter(change) {
             let el = document.getElementById('groupSize');
             let disp = document.getElementById('group-display');
@@ -684,7 +836,6 @@
         }
 
         // --- AUTOCOMPLETE LOGIC ---
-        const capitals = { 'India': 'New Delhi', 'USA': 'New York', 'UK': 'London', 'Canada': 'Toronto', 'Australia': 'Sydney', 'Germany': 'Berlin', 'France': 'Paris', 'Japan': 'Tokyo', 'Singapore': 'Singapore City', 'UAE': 'Dubai', 'Other': 'your capital city' };
         const destInput = document.getElementById('destination');
         const destDropdown = document.getElementById('dest-suggestions');
         const natSelect = document.getElementById('nationality');
@@ -716,9 +867,13 @@
             const prompt = `User flying from ${cap} (${nat}). Typed "${query}" for destination. Suggest up to 5 matches. Return JSON array: [{"name": "String", "cost": "String", "score": Integer (0-100)}]. Flight costs in ${cur} symbol.`;
 
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ contents:[{parts:[{text:prompt}]}] }), signal });
-                if(!res.ok) throw new Error("API Error");
-                const jsonRes = await res.json();
+                if (Date.now() < quotaCooldownUntil) {
+                    const sec = Math.ceil((quotaCooldownUntil - Date.now()) / 1000);
+                    destDropdown.innerHTML = `<li class="ac-loading" style="color:var(--warning)">Rate limit reached. Retry in ${sec}s.</li>`;
+                    return;
+                }
+                const jsonRes = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}] }, { retries: 0 });
+                if (signal.aborted) return;
                 let text = jsonRes.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'').trim();
                 const parsed = JSON.parse(text);
                 if(!parsed || parsed.length === 0) { destDropdown.classList.remove('show'); return; }
@@ -731,7 +886,15 @@
                     li.onclick = () => { destInput.value = item.name; destDropdown.classList.remove('show'); destInput.focus(); saveState(); };
                     destDropdown.appendChild(li);
                 });
-            } catch (err) { if(err.name !== 'AbortError') destDropdown.innerHTML = '<li class="ac-loading" style="color:var(--danger)">Failed to fetch</li>'; }
+            } catch (err) {
+                if(err.name !== 'AbortError') {
+                    if (String(err.message).toLowerCase().includes('quota') && Date.now() > quotaToastUntil) {
+                        showToast('Gemini quota exceeded. Please retry in a few seconds.');
+                        quotaToastUntil = Date.now() + 10000;
+                    }
+                    destDropdown.innerHTML = '<li class="ac-loading" style="color:var(--danger)">Suggestions unavailable right now</li>';
+                }
+            }
         }
 
         // --- SUBMIT LOGIC ---
@@ -779,9 +942,7 @@ All costs must be in ${AppState.data.currency}. User budget is ${AppState.data.b
 Return ONLY valid JSON:
 { "safety_score": <int 0-100>, "risks": [ { "id": "r1", "title": "String", "description": "String", "severity": "high|medium|low", "options": ["Op 1", "Op 2"] } ] }`;
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }) });
-                if(!res.ok) throw new Error("API Error.");
-                const jsonRes = await res.json();
+                const jsonRes = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }, { retries: 1 });
                 let text = jsonRes.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'').trim();
                 const parsed = JSON.parse(text);
                 
@@ -870,6 +1031,8 @@ Return ONLY valid JSON:
             saveState();
             setTimeout(() => { setButtonLoading('btn-confirm-res', false); initItineraryStream(); }, 500);
         });
+        document.getElementById('btn-download-itinerary').addEventListener('click', downloadItineraryPlan);
+        document.getElementById('btn-another-plan').addEventListener('click', clearAndStartAnotherPlan);
 
         // --- LOADING & STREAMING ---
         let loadingIntervals = []; let loadingTimers = []; let isFirstChunkReceived = false; let fallbackMode = false; let parsedSections = new Set();
@@ -935,6 +1098,7 @@ Return ONLY valid JSON:
 
         async function initItineraryStream() {
             startPremiumLoading(); isFirstChunkReceived = false; fallbackMode = false; parsedSections.clear();
+            AppState.itineraryRaw = '';
             document.getElementById('itin-score').textContent = `Score: ${AppState.score}`;
             document.getElementById('itin-score').style.color = AppState.score >= 80 ? 'var(--primary)' : AppState.score >= 50 ? 'var(--warning)' : 'var(--danger)';
             document.getElementById('visa-section-container').innerHTML = '';
@@ -983,8 +1147,7 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
 `;
 
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }) });
-                if(!res.ok) throw new Error("Streaming failed");
+                const res = await callGemini('streamGenerateContent', { contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }, { stream: true, retries: 1 });
                 const reader = res.body.getReader(); const decoder = new TextDecoder(); let fullText = "";
 
                 while(true) {
@@ -1002,11 +1165,26 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                         }
                     }
                 }
+                AppState.itineraryRaw = fullText;
+                saveState();
                 if(!isFirstChunkReceived) stopPremiumLoadingAndTransition();
             } catch(e) {
-                console.error(e); stopPremiumLoadingAndTransition(); fallbackMode = true;
-                document.getElementById('fallback-container').style.display = 'block';
-                document.getElementById('fallback-container').innerHTML = `<h2 style='color:var(--danger)'>Error generating itinerary</h2><p>${e.message}</p>`;
+                console.error(e);
+                try {
+                    const fallbackJson = await callGemini('generateContent', { contents:[{parts:[{text:prompt}]}], tools:[{google_search:{}}] }, { retries: 1 });
+                    const fallbackText = (((fallbackJson || {}).candidates || [])[0] || {}).content?.parts?.[0]?.text || '';
+                    if(!fallbackText.trim()) throw new Error('Fallback returned empty itinerary');
+
+                    stopPremiumLoadingAndTransition();
+                    parseStreamBuffer(fallbackText);
+                    AppState.itineraryRaw = fallbackText;
+                    saveState();
+                    showToast('Live stream failed, loaded backup itinerary instead.');
+                } catch (fallbackErr) {
+                    stopPremiumLoadingAndTransition(); fallbackMode = true;
+                    document.getElementById('fallback-container').style.display = 'block';
+                    document.getElementById('fallback-container').innerHTML = `<h2 style='color:var(--danger)'>Error generating itinerary</h2><p>${fallbackErr.message}</p>`;
+                }
             }
         }
 
@@ -1017,8 +1195,8 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
 
             const extract = (marker) => { const match = text.match(new RegExp(`## ${marker}\\n([\\s\\S]*?)(?=## |$)`, 'i')); return match ? match[1].trim() : null; };
 
-            let tName = extract('TRIP_NAME'); if(tName && !parsedSections.has('TRIP_NAME')) { document.getElementById('itin-trip-name').textContent = tName; parsedSections.add('TRIP_NAME'); }
-            let tCost = extract('TOTAL_COST'); if(tCost) document.getElementById('itin-cost').textContent = `Est: ${tCost}`;
+            let tName = extract('TRIP_NAME'); if(tName && !parsedSections.has('TRIP_NAME')) { document.getElementById('itin-trip-name').textContent = cleanAiText(tName); parsedSections.add('TRIP_NAME'); }
+            let tCost = extract('TOTAL_COST'); if(tCost) document.getElementById('itin-cost').textContent = `Est: ${cleanAiText(tCost)}`;
             
             // Premium Visa Card
             let visa = extract('VISA_INFO');
@@ -1030,8 +1208,8 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                 
                 let flag = flags[AppState.data.nationality] || '🌍';
                 
-                let lines = visa.split('\n').filter(l=>l.trim());
-                let listHtml = '<ul>' + lines.slice(1).map(l => `<li>${l.replace(/^-/,'').trim()}</li>`).join('') + '</ul>';
+                let lines = visa.split('\n').filter(l=>l.trim()).map(cleanAiText);
+                let listHtml = '<ul>' + lines.slice(1).map(l => `<li>${l}</li>`).join('') + '</ul>';
 
                 document.getElementById('visa-section-container').innerHTML = `
                     <div class="visa-card">
@@ -1051,7 +1229,7 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                 let html = '';
                 cBreak.split('|').forEach(p => {
                     const [lbl, val] = p.split(':');
-                    if(lbl && val) html += `<div class="glass-card" style="padding:1.5rem;"><div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; color:var(--text-muted);"><span>${lbl.trim()}</span> <strong style="color:var(--text-main);">${val.trim()}</strong></div><div style="height:6px; background:rgba(255,255,255,0.1); border-radius:var(--radius-pill);"><div style="height:100%; background:var(--accent); border-radius:var(--radius-pill); width:${Math.random()*40+40}%"></div></div></div>`;
+                    if(lbl && val) html += `<div class="glass-card" style="padding:1.5rem;"><div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; color:var(--text-muted);"><span>${cleanAiText(lbl)}</span> <strong style="color:var(--text-main);">${cleanAiText(val)}</strong></div><div style="height:6px; background:rgba(255,255,255,0.1); border-radius:var(--radius-pill);"><div style="height:100%; background:var(--accent); border-radius:var(--radius-pill); width:${Math.random()*40+40}%"></div></div></div>`;
                 });
                 document.getElementById('cost-section').innerHTML = html; parsedSections.add('COST_BREAKDOWN');
             }
@@ -1071,7 +1249,7 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                 times.forEach(t => {
                     const rx = new RegExp(`### ${t}\\n([\\s\\S]*?)(?=### |Hotel:|$)`, 'i'); const m = content.match(rx);
                     if(m) {
-                        let lines = m[1].split('\n').filter(l=>l.trim()); let mainLine = lines[0].split('|');
+                        let lines = m[1].split('\n').filter(l=>l.trim()).map(cleanAiText); let mainLine = lines[0].split('|').map(cleanAiText);
                         let tipLine = lines.find(l=>l.includes('Pro Tip:'));
                         html += `
                         <div class="glass-card" style="padding:2rem; margin-bottom:1.5rem;">
@@ -1084,13 +1262,13 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
                                 ${mainLine[2] ? `<span style="background:rgba(255,255,255,0.05); padding:0.4rem 0.8rem; border-radius:var(--radius-md);">⏱️ ${mainLine[2]}</span>` : ''}
                                 ${mainLine[3] ? `<span style="background:rgba(255,255,255,0.05); padding:0.4rem 0.8rem; border-radius:var(--radius-md); color:var(--primary);">💰 ${mainLine[3]}</span>` : ''}
                             </div>
-                            ${tipLine ? `<div style="font-style:italic; color:var(--text-muted); background:rgba(255,255,255,0.03); padding:1rem; border-left:3px solid var(--primary);">${tipLine.replace('Pro Tip:', '')}</div>` : ''}
+                            ${tipLine ? `<div style="font-style:italic; color:var(--text-muted); background:rgba(255,255,255,0.03); padding:1rem; border-left:3px solid var(--primary);">${cleanAiText(tipLine.replace('Pro Tip:', ''))}</div>` : ''}
                         </div>`;
                     }
                 });
                 
                 const getLine = (key) => { const m = content.match(new RegExp(`${key}:(.*)`)); return m ? m[1].trim() : ''; }
-                let hotel = getLine('Hotel'); let meals = getLine('Meals'); let trans = getLine('Transport');
+                let hotel = cleanAiText(getLine('Hotel')); let meals = cleanAiText(getLine('Meals')); let trans = cleanAiText(getLine('Transport'));
                 if(hotel || meals || trans) {
                     html += `<div class="glass-card" style="padding:2rem; border-color:var(--primary); background:rgba(0,255,136,0.05);">
                         <h4 style="margin-bottom:1rem;">Day Summary</h4>
@@ -1109,13 +1287,27 @@ Police: [Num] | Ambulance: [Num] | Embassy: [Contact]
             }
             let emerg = extract('EMERGENCY');
             if(emerg && emerg.includes('|')) {
-                let items = emerg.split('|').map(i => { let [lbl, val] = i.split(':'); return `<div class="glass-card" style="padding:1rem; display:flex; align-items:center; gap:1rem;">📞 <div><strong>${lbl?lbl.trim():''}</strong><br>${val?val.trim():''}</div></div>`; }).join('');
-                document.querySelector('#tips-section').insertAdjacentHTML('beforebegin', `<h3 class="section-title">Emergency Contacts</h3><div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:2rem;">${items}</div>`);
+                let items = emerg.split('|').map(i => { let [lbl, val] = i.split(':'); return `<div class="glass-card" style="padding:1rem; display:flex; align-items:center; gap:1rem;">📞 <div><strong>${lbl?cleanAiText(lbl):''}</strong><br>${val?cleanAiText(val):''}</div></div>`; }).join('');
+                let emergencyContainer = document.getElementById('emergency-section');
+                if(!emergencyContainer) {
+                    emergencyContainer = document.createElement('section');
+                    emergencyContainer.id = 'emergency-section';
+                    emergencyContainer.style.marginBottom = '2rem';
+                    emergencyContainer.innerHTML = `<h3 class="section-title">Emergency Contacts</h3><div id="emergency-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;"></div>`;
+                    document.querySelector('#tips-section').insertAdjacentElement('beforebegin', emergencyContainer);
+                }
+                document.getElementById('emergency-grid').innerHTML = items;
             }
             let tips = extract('TIPS');
             if(tips) {
                 document.getElementById('tips-section').style.display = 'block';
-                document.getElementById('tips-grid').innerHTML = tips.split('\n').filter(t=>t.trim()!=='').map(i => `<div class="glass-card" style="padding:1.5rem;">💡 ${i.replace(/^\d+\.\s*/,'')}</div>`).join('');
+                document.getElementById('tips-grid').innerHTML = tips
+                    .split('\n')
+                    .filter(t => t.trim() !== '')
+                    .map(i => cleanAiText(i))
+                    .filter(t => t !== '')
+                    .map(t => `<div class="glass-card" style="padding:1.5rem;">💡 ${t}</div>`)
+                    .join('');
             }
         }
     </script>
